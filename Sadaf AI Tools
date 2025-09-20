@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sadaf AI Tools</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d0f1c; /* A deep, dark blue background */
+            color: #d1d5db; /* Light gray for text */
+            transition: background-color 0.3s ease;
+        }
+
+        .hero-section {
+            background-image: url('https://placehold.co/1920x1080/1a1e2f/d1d5db?text=Sadaf+AI+Tools');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .card {
+            background-color: #1a1e2f; /* A slightly lighter shade of the background */
+            border: 1px solid #374151; /* A subtle border */
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.6);
+        }
+
+        .card-link {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .title {
+            background: linear-gradient(45deg, #a78bfa, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: #9ca3af;
+        }
+    </style>
+</head>
+<body class="p-4">
+    <header class="py-12 text-center hero-section bg-cover bg-center rounded-3xl mb-8">
+        <div class="backdrop-blur-sm bg-black/50 p-8 rounded-2xl mx-auto max-w-4xl">
+            <h1 class="text-5xl md:text-6xl font-extrabold title mb-4">
+                Sadaf AI Tools 🚀
+            </h1>
+            <p class="text-lg md:text-xl font-medium subtitle max-w-2xl mx-auto">
+                Discover a collection of free and innovative tools powered by AI to simplify your daily tasks and boost your creativity.
+            </p>
+        </div>
+    </header>
+
+    <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
+        <!-- Social Media Post Generator -->
+        <a href="social-media.html" class="card-link">
+            <div class="card p-6 flex flex-col items-center text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-purple-400 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                </svg>
+                <h2 class="text-2xl font-bold text-gray-200 mb-2">Social Media Post</h2>
+                <p class="text-gray-400 text-sm">Generate engaging posts and hashtags in seconds.</p>
+            </div>
+        </a>
+
+        <!-- Visa Document Checker -->
+        <a href="visa-checker.html" class="card-link">
+            <div class="card p-6 flex flex-col items-center text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-green-400 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                <h2 class="text-2xl font-bold text-gray-200 mb-2">Visa Checker</h2>
+                <p class="text-gray-400 text-sm">Check required documents for any visa type.</p>
+            </div>
+        </a>
+
+        <!-- WhatsApp Reply Maker -->
+        <a href="whatsapp-reply.html" class="card-link">
+            <div class="card p-6 flex flex-col items-center text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-blue-400 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <h2 class="text-2xl font-bold text-gray-200 mb-2">WhatsApp Reply</h2>
+                <p class="text-gray-400 text-sm">Generate smart and quick replies for your chats.</p>
+            </div>
+        </a>
+
+        <!-- Online Scam Detector -->
+        <a href="scam-detector.html" class="card-link">
+            <div class="card p-6 flex flex-col items-center text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-red-400 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <h2 class="text-2xl font-bold text-gray-200 mb-2">Scam Detector</h2>
+                <p class="text-gray-400 text-sm">Check suspicious messages for potential scams.</p>
+            </div>
+        </a>
+
+        <!-- Health Checker -->
+        <a href="health-checker.html" class="card-link">
+            <div class="card p-6 flex flex-col items-center text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-teal-400 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"></path>
+                    <path d="M12 12H9v-2h3V7h2v3h3v2h-3v3h-2v-3z"></path>
+                </svg>
+                <h2 class="text-2xl font-bold text-gray-200 mb-2">Health Checker</h2>
+                <p class="text-gray-400 text-sm">Get general health info by describing your symptoms.</p>
+            </div>
+        </a>
+
+        <!-- Zakat Calculator -->
+        <a href="zakat-calculator.html" class="card-link">
+            <div class="card p-6 flex flex-col items-center text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-yellow-400 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                    <polyline points="3.27 6.84 12 12.05 20.73 6.84"></polyline>
+                    <line x1="12" y1="22.08" x2="12" y2="12.05"></line>
+                    <path d="M16 16.5l-4-2.5-4 2.5v-5.22L12 8l4 3.28v5.22z"></path>
+                </svg>
+                <h2 class="text-2xl font-bold text-gray-200 mb-2">Zakat Calculator</h2>
+                <p class="text-gray-400 text-sm">Calculate your zakat obligation easily.</p>
+            </div>
+        </a>
+
+        <!-- Contact Us -->
+        <a href="contact-us.html" class="card-link">
+            <div class="card p-6 flex flex-col items-center text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 10a8 8 0 0 1-8 8h-2a8 8 0 0 1-8-8V2h10a2 2 0 0 1 2 2v6z"></path>
+                    <path d="M12 18H5a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h7l-3-3m0 6l3 3"></path>
+                </svg>
+                <h2 class="text-2xl font-bold text-gray-200 mb-2">Contact Us</h2>
+                <p class="text-gray-400 text-sm">Send us your feedback and questions.</p>
+            </div>
+        </a>
+    </main>
+</body>
+</html>
