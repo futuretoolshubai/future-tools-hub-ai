@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Reply Maker - Future Tools Hub AI</title>
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            transition: background-color 0.3s ease;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .input-area {
+            min-height: 150px;
+        }
+        .prose-custom {
+            line-height: 1.6;
+            color: #1f2937;
+        }
+        .prose-custom h2, .prose-custom h3 {
+            font-weight: 700;
+            margin-top: 1.5rem;
+        }
+        .prose-custom ul {
+            list-style-type: disc;
+            padding-left: 1.5rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-4">
+
+    <!-- Main application container -->
+    <div class="container mx-auto p-8 card max-w-4xl">
+
+        <!-- Back to home link -->
+        <a href="index.html" class="text-blue-600 hover:text-blue-800 transition-colors font-semibold flex items-center mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+            </svg>
+            Back to Home
+        </a>
+
+        <!-- Header section -->
+        <header class="text-center mb-6">
+            <h1 class="text-4xl font-extrabold text-gray-800 mb-2">
+                WhatsApp Business Reply Maker 📱
+            </h1>
+            <p class="text-gray-600 text-lg">
+                Generate short professional WhatsApp replies for your business.
+            </p>
+            <p class="text-red-500 font-bold mt-2">
+                Tip: Copy any of the replies directly to your WhatsApp chat.
+            </p>
+        </header>
+
+        <!-- Tool input and output sections -->
+        <section class="space-y-6">
+            <!-- Input area for user description -->
+            <div class="space-y-2">
+                <label for="prompt-input" class="text-gray-700 font-semibold text-lg">
+                    Describe the customer's message:
+                </label>
+                <textarea
+                    id="prompt-input"
+                    placeholder='e.g., "Customer message: Do you have the red shirt in size L? Business name: Ali\'s Clothing"'
+                    class="w-full p-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 transition-colors input-area resize-none"
+                ></textarea>
+            </div>
+
+            <!-- "Check" button to trigger the process -->
+            <button
+                id="check-button"
+                class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 transform hover:scale-105"
+            >
+                Generate Replies
+            </button>
+
+            <!-- Loading indicator -->
+            <div id="loading-indicator" class="hidden text-center text-gray-500 text-lg py-4">
+                <div class="flex items-center justify-center">
+                    <svg class="animate-spin -ml-1 mr-3 h-6 w-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Generating...
+                </div>
+            </div>
+
+            <!-- Output area for analysis results -->
+            <div id="output-area" class="mt-8 space-y-4 hidden">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-2xl font-bold text-gray-800">Generated Replies:</h2>
+                    <button id="copy-button" class="bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-gray-300 transition-colors">
+                        Copy All to Clipboard
+                    </button>
+                </div>
+                <div id="results-content" class="bg-gray-100 p-6 rounded-xl shadow-inner text-gray-800 prose prose-custom max-w-none">
+                    <!-- Results will be injected here -->
+                </div>
+            </div>
+
+            <!-- Message box for user feedback -->
+            <div id="message-box" class="fixed inset-0 flex items-center justify-center hidden bg-gray-900 bg-opacity-50 z-50">
+                <div class="bg-white p-6 rounded-xl shadow-2xl text-center max-w-sm w-full">
+                    <p id="message-text" class="text-lg font-medium text-gray-800 mb-4"></p>
+                    <button id="close-message" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">OK</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- JavaScript to handle the functionality -->
+    <script>
+        // Getting elements from the HTML file
+        const promptInput = document.getElementById('prompt-input');
+        const checkButton = document.getElementById('check-button');
+        const outputArea = document.getElementById('output-area');
+        const resultsContent = document.getElementById('results-content');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const copyButton = document.getElementById('copy-button');
+        const messageBox = document.getElementById('message-box');
+        const messageText = document.getElementById('message-text');
+        const closeMessageButton = document.getElementById('close-message');
+
+        // Function to display messages to the user
+        function showMessage(message) {
+            messageText.textContent = message;
+            messageBox.classList.remove('hidden');
+        }
+
+        // Function to close the message box
+        closeMessageButton.addEventListener('click', () => {
+            messageBox.classList.add('hidden');
+        });
+
+        // Function to copy results to clipboard
+        copyButton.addEventListener('click', () => {
+            const textToCopy = resultsContent.innerText;
+            if (textToCopy) {
+                try {
+                    const el = document.createElement('textarea');
+                    el.value = textToCopy;
+                    document.body.appendChild(el);
+                    el.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(el);
+                    showMessage('All replies copied to clipboard!');
+                } catch (err) {
+                    console.error('Failed to copy text:', err);
+                    showMessage('Could not copy text to clipboard.');
+                }
+            } else {
+                showMessage('No replies to copy.');
+            }
+        });
+
+        // Event listener for the check button click
+        checkButton.addEventListener('click', async () => {
+            const prompt = promptInput.value.trim();
+            if (prompt === '') {
+                showMessage('Please describe the customer\'s message.');
+                return;
+            }
+
+            // Clear previous results and show loading indicator
+            outputArea.classList.add('hidden');
+            loadingIndicator.classList.remove('hidden');
+            resultsContent.innerHTML = '';
+
+            try {
+                // Construct the system instruction and user query for the LLM
+                const systemPrompt = "You are a customer support assistant. Write three short and effective WhatsApp replies: one formal, one friendly, and one a quick auto-reply. The replies should be based on the provided customer message and business name.";
+                const userQuery = "Customer message and business name: " + prompt;
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+                const payload = {
+                    contents: [{ parts: [{ text: userQuery }] }],
+                    tools: [{ "google_search": {} }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] }
+                };
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API call failed with status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                const candidate = result.candidates?.[0];
+                let generatedText = null;
+
+                if (candidate && candidate.content?.parts?.[0]?.text) {
+                    generatedText = candidate.content.parts[0].text;
+                } else {
+                    throw new Error("Invalid response format from the API.");
+                }
+
+                if (generatedText) {
+                    // Update the output area with the generated text
+                    const formattedText = generatedText.replace(/\n/g, '<br>');
+                    resultsContent.innerHTML = formattedText;
+                    outputArea.classList.remove('hidden');
+                } else {
+                    throw new Error("No content was generated.");
+                }
+
+            } catch (error) {
+                console.error("Error generating content:", error);
+                showMessage("The AI service is currently unavailable. This may be due to a temporary issue or a network problem.");
+            } finally {
+                loadingIndicator.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
