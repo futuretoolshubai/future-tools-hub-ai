@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>زکات کیلکولیٹر - Future Tools Hub AI</title>
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Nastaliq Urdu', sans-serif;
+            background-color: #f0f4f8;
+            transition: background-color 0.3s ease;
+            direction: rtl; /* For Urdu text direction */
+        }
+        .urdu-font {
+            font-family: 'Noto Nastaliq Urdu', sans-serif;
+            direction: rtl;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .prose-custom {
+            line-height: 1.8;
+            color: #1f2937;
+        }
+        .prose-custom h2, .prose-custom h3 {
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-4">
+
+    <!-- Main application container -->
+    <div class="container mx-auto p-8 card max-w-2xl">
+
+        <!-- Back to home link -->
+        <a href="index.html" class="text-blue-600 hover:text-blue-800 transition-colors font-semibold flex items-center mb-6 urdu-font" style="direction: ltr;">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+            </svg>
+            <span class="urdu-font">واپس ہوم پیج پر</span>
+        </a>
+
+        <!-- Header section -->
+        <header class="text-center mb-6 urdu-font">
+            <h1 class="text-4xl font-extrabold text-gray-800 mb-2">
+                زکات اور عطیہ کیلکولیٹر 💰
+            </h1>
+            <p class="text-gray-600 text-lg">
+                اپنی نقدی، سونا اور دیگر اثاثوں پر زکات (2.5%) کا اندازہ لگائیں۔
+            </p>
+            <p class="text-red-500 font-bold mt-2">
+                نوٹ: یہ صرف رہنمائی کے لیے ہے؛ شرعی رہنمائی کے لیے مقامی عالم سے رجوع کریں۔
+            </p>
+        </header>
+
+        <!-- Tool input and output sections -->
+        <section class="space-y-6">
+            <!-- Currency Selector -->
+            <div class="space-y-2 urdu-font">
+                <label for="currency-select" class="text-gray-700 font-semibold text-lg">
+                    اپنی کرنسی کا انتخاب کریں:
+                </label>
+                <select id="currency-select" class="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-colors">
+                    <option value="PKR">پاکستانی روپیہ (PKR)</option>
+                    <option value="USD">امریکی ڈالر (USD)</option>
+                    <option value="AED">اماراتی درہم (AED)</option>
+                    <option value="SAR">سعودی ریال (SAR)</option>
+                    <option value="TRY">ترک لیرا (TRY)</option>
+                    <option value="IDR">انڈونیشیائی روپیہ (IDR)</option>
+                    <option value="MYR">ملائیشیائی رینگٹ (MYR)</option>
+                    <option value="EGP">مصری پاؤنڈ (EGP)</option>
+                    <option value="IQD">عراقی دینار (IQD)</option>
+                </select>
+            </div>
+            
+            <!-- Input fields for different assets -->
+            <div class="space-y-4 urdu-font">
+                <div class="flex items-center space-x-4">
+                    <label for="cash-input" class="text-gray-700 font-semibold w-1/2">
+                        نقدی (<span id="currency-symbol">PKR</span>):
+                    </label>
+                    <input
+                        id="cash-input"
+                        type="number"
+                        placeholder="مثال: 150000"
+                        class="w-1/2 p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
+                    >
+                </div>
+                <div class="flex items-center space-x-4">
+                    <label for="gold-input" class="text-gray-700 font-semibold w-1/2">
+                        سونا (گرام):
+                    </label>
+                    <input
+                        id="gold-input"
+                        type="number"
+                        placeholder="مثال: 10"
+                        class="w-1/2 p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
+                    >
+                </div>
+                <div class="flex items-center space-x-4">
+                    <label for="silver-input" class="text-gray-700 font-semibold w-1/2">
+                        چاندی (گرام):
+                    </label>
+                    <input
+                        id="silver-input"
+                        type="number"
+                        placeholder="مثال: 0"
+                        class="w-1/2 p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
+                    >
+                </div>
+                <div class="flex items-center space-x-4">
+                    <label for="business-input" class="text-gray-700 font-semibold w-1/2">
+                        تجارتی اثاثے (<span id="currency-symbol-2">PKR</span>):
+                    </label>
+                    <input
+                        id="business-input"
+                        type="number"
+                        placeholder="مثال: 0"
+                        class="w-1/2 p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
+                    >
+                </div>
+                <div class="flex items-center space-x-4">
+                    <label for="debts-input" class="text-gray-700 font-semibold w-1/2">
+                        قرض (<span id="currency-symbol-3">PKR</span>):
+                    </label>
+                    <input
+                        id="debts-input"
+                        type="number"
+                        placeholder="مثال: 0"
+                        class="w-1/2 p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
+                    >
+                </div>
+            </div>
+
+            <!-- "Calculate" button to trigger the process -->
+            <button
+                id="calculate-button"
+                class="w-full bg-gradient-to-r from-teal-500 to-green-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:from-teal-600 hover:to-green-700 transition-all duration-300 transform hover:scale-105 urdu-font"
+            >
+                زکات کا حساب لگائیں
+            </button>
+
+            <!-- Loading indicator -->
+            <div id="loading-indicator" class="hidden text-center text-gray-500 text-lg py-4 urdu-font">
+                <div class="flex items-center justify-center">
+                    <svg class="animate-spin -ml-1 mr-3 h-6 w-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    حساب لگایا جا رہا ہے...
+                </div>
+            </div>
+
+            <!-- Output area for analysis results -->
+            <div id="output-area" class="mt-8 space-y-4 hidden urdu-font">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-2xl font-bold text-gray-800">آپ کی زکات کا خلاصہ:</h2>
+                    <button id="copy-button" class="bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-gray-300 transition-colors">
+                        کاپی کریں
+                    </button>
+                </div>
+                <div id="results-content" class="bg-gray-100 p-6 rounded-xl shadow-inner text-gray-800 prose prose-custom max-w-none urdu-font" style="direction: rtl;">
+                    <!-- Results will be injected here -->
+                </div>
+            </div>
+
+            <!-- Message box for user feedback -->
+            <div id="message-box" class="fixed inset-0 flex items-center justify-center hidden bg-gray-900 bg-opacity-50 z-50 urdu-font">
+                <div class="bg-white p-6 rounded-xl shadow-2xl text-center max-w-sm w-full urdu-font">
+                    <p id="message-text" class="text-lg font-medium text-gray-800 mb-4"></p>
+                    <button id="close-message" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">ٹھیک ہے</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- JavaScript to handle the functionality -->
+    <script>
+        // Getting elements from the HTML file
+        const currencySelect = document.getElementById('currency-select');
+        const cashInput = document.getElementById('cash-input');
+        const goldInput = document.getElementById('gold-input');
+        const silverInput = document.getElementById('silver-input');
+        const businessInput = document.getElementById('business-input');
+        const debtsInput = document.getElementById('debts-input');
+        const calculateButton = document.getElementById('calculate-button');
+        const outputArea = document.getElementById('output-area');
+        const resultsContent = document.getElementById('results-content');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const copyButton = document.getElementById('copy-button');
+        const messageBox = document.getElementById('message-box');
+        const messageText = document.getElementById('message-text');
+        const closeMessageButton = document.getElementById('close-message');
+        const currencySymbol1 = document.getElementById('currency-symbol');
+        const currencySymbol2 = document.getElementById('currency-symbol-2');
+        const currencySymbol3 = document.getElementById('currency-symbol-3');
+
+        // Function to display messages to the user
+        function showMessage(message) {
+            messageText.textContent = message;
+            messageBox.classList.remove('hidden');
+        }
+
+        // Function to close the message box
+        closeMessageButton.addEventListener('click', () => {
+            messageBox.classList.add('hidden');
+        });
+
+        // Function to copy results to clipboard
+        copyButton.addEventListener('click', () => {
+            const textToCopy = resultsContent.innerText;
+            if (textToCopy) {
+                try {
+                    const el = document.createElement('textarea');
+                    el.value = textToCopy;
+                    document.body.appendChild(el);
+                    el.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(el);
+                    showMessage('نتائج کاپی کر لیے گئے ہیں!');
+                } catch (err) {
+                    console.error('Failed to copy text:', err);
+                    showMessage('متن کاپی نہیں کیا جا سکا۔');
+                }
+            } else {
+                showMessage('کاپی کرنے کے لیے کوئی نتیجہ نہیں ہے۔');
+            }
+        });
+
+        // Event listener to update currency symbols on change
+        currencySelect.addEventListener('change', () => {
+            const selectedCurrency = currencySelect.value;
+            currencySymbol1.textContent = selectedCurrency;
+            currencySymbol2.textContent = selectedCurrency;
+            currencySymbol3.textContent = selectedCurrency;
+        });
+
+        // Event listener for the calculate button click
+        calculateButton.addEventListener('click', async () => {
+            const currency = currencySelect.value;
+            const cash = parseFloat(cashInput.value) || 0;
+            const gold = parseFloat(goldInput.value) || 0;
+            const silver = parseFloat(silverInput.value) || 0;
+            const businessAssets = parseFloat(businessInput.value) || 0;
+            const debts = parseFloat(debtsInput.value) || 0;
+
+            if (cash <= 0 && gold <= 0 && silver <= 0 && businessAssets <= 0) {
+                showMessage('برائے مہربانی زکات کا حساب لگانے کے لیے کم از کم ایک رقم درج کریں۔');
+                return;
+            }
+
+            // Clear previous results and show loading indicator
+            outputArea.classList.add('hidden');
+            loadingIndicator.classList.remove('hidden');
+            resultsContent.innerHTML = '';
+
+            try {
+                // Step 1: Search for the current gold price to get the Nisab value.
+                const goldPriceQuery = `current gold price per gram in ${currency}`;
+                const searchResults = await google_search.search(goldPriceQuery);
+                const goldPriceText = searchResults.results[0].snippet;
+                const nisabValuePrompt = `Find the current price of gold per gram in ${currency} from this text and just provide the price as a number without any currency symbol. Text: "${goldPriceText}"`;
+                
+                const nisabPriceResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: nisabValuePrompt }] }] })
+                });
+
+                const nisabPriceResult = await nisabPriceResponse.json();
+                const nisabPriceText = nisabPriceResult.candidates?.[0]?.content?.parts?.[0]?.text;
+                const nisabPrice = parseFloat(nisabPriceText) || 0;
+
+                if (nisabPrice === 0) {
+                    showMessage('سونے کی قیمت معلوم نہیں ہو سکی، براہ کرم دستی طور پر دوبارہ کوشش کریں۔');
+                    return;
+                }
+
+                // Nisab for gold is 87.48 grams, for silver it's 612.36 grams
+                const goldNisab = nisabPrice * 87.48;
+                const silverNisab = nisabPrice * 612.36;
+
+                const userPrompt = `کرنسی: ${currency}, نقدی: ${cash}, سونا: ${gold} گرام, چاندی: ${silver} گرام, تجارتی اثاثے: ${businessAssets}, قرض: ${debts}. سونے کا نصاب: ${goldNisab}, چاندی کا نصاب: ${silverNisab}.`;
+
+                // Step 2: Send the full prompt with Nisab value to the LLM for calculation.
+                const systemPrompt = "آپ ایک اسلامی فنانس معاون ہیں۔ دیے گئے اثاثوں اور قرض کی بنیاد پر زکات (2.5%) کا حساب لگائیں۔ کل اثاثے، نصاب کی تخمینہ شدہ قیمت، قابل ادائیگی زکات، اور مختصر رہنمائی دکھائیں۔";
+                const userQuery = "مندرجہ ذیل تفصیلات پر زکات کا حساب لگائیں: " + userPrompt;
+                
+                const payload = {
+                    contents: [{ parts: [{ text: userQuery }] }],
+                    tools: [{ "google_search": {} }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] }
+                };
+
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API call failed with status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                const candidate = result.candidates?.[0];
+                let generatedText = null;
+
+                if (candidate && candidate.content?.parts?.[0]?.text) {
+                    generatedText = candidate.content.parts[0].text;
+                } else {
+                    throw new Error("Invalid response format from the API.");
+                }
+
+                if (generatedText) {
+                    // Update the output area with the generated text
+                    const formattedText = generatedText.replace(/\n/g, '<br>');
+                    resultsContent.innerHTML = formattedText;
+                    outputArea.classList.remove('hidden');
+                } else {
+                    throw new Error("No content was generated.");
+                }
+
+            } catch (error) {
+                console.error("Error generating content:", error);
+                showMessage("اے آئی سروس فی الحال دستیاب نہیں ہے۔ یہ کسی عارضی مسئلے یا نیٹ ورک کی خرابی کی وجہ سے ہو سکتا ہے۔");
+            } finally {
+                loadingIndicator.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
