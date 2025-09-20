@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Checker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d0f1c; /* Dark background */
+            transition: background-color 0.3s ease;
+        }
+        .container {
+            background-color: #1a1e2f; /* Darker container background */
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+        }
+        .btn {
+            background-color: #10b981;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            font-weight: bold;
+            transition: all 0.2s ease-in-out;
+            border: 2px solid transparent;
+        }
+        .btn:hover {
+            background-color: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+        .input-group {
+            position: relative;
+        }
+        .input-group textarea {
+            border: 2px solid #374151; /* Darker border */
+            border-radius: 0.75rem;
+            transition: all 0.2s ease-in-out;
+            color: #d1d5db; /* Light gray text */
+            background-color: #1f2937; /* Even darker background */
+        }
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #34d399; /* Light green focus */
+            box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.5);
+        }
+        #result-box {
+            background-color: #1f2937;
+            border: 2px solid #374151;
+            border-radius: 0.75rem;
+            min-height: 100px;
+            padding: 1rem;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: #d1d5db;
+        }
+        .home-link {
+            color: #d1d5db;
+            transition: color 0.2s ease-in-out;
+        }
+        .home-link:hover {
+            color: #34d399;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 flex items-center justify-center min-h-screen p-4">
+    <div class="container mx-auto p-8 max-w-2xl backdrop-blur-sm bg-gray-800/70 text-white">
+        <div class="flex items-center mb-4">
+            <a href="index.html" class="home-link">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+            </a>
+            <h1 class="text-3xl font-extrabold text-white text-center flex-grow">
+                Health Checker
+            </h1>
+        </div>
+        
+        <p class="text-gray-400 text-center mb-8">
+            Describe your symptoms to get general health information.
+        </p>
+
+        <div class="space-y-6">
+            <div>
+                <label for="symptoms-input" class="block text-gray-300 font-bold mb-2">My Symptoms:</label>
+                <div class="input-group">
+                    <textarea id="symptoms-input" rows="6" class="w-full px-4 py-2" placeholder="e.g., 'I have a sore throat and a cough.'"></textarea>
+                </div>
+            </div>
+            
+            <button id="check-btn" class="btn w-full">Check My Symptoms</button>
+            
+            <div class="mt-8">
+                <h2 class="text-2xl font-bold text-white mb-4">Health Information:</h2>
+                <div id="result-box" class="text-gray-300">
+                    <p class="text-gray-400">Please describe your symptoms to begin...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const apiKey = "";
+        const checkBtn = document.getElementById('check-btn');
+        const symptomsInput = document.getElementById('symptoms-input');
+        const resultBox = document.getElementById('result-box');
+
+        const makeApiCall = async (prompt) => {
+            const apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=" + apiKey;
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+            };
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                const text = result.candidates[0].content.parts[0].text;
+                return text;
+            } catch (error) {
+                console.error("API Call Error:", error);
+                return "Sorry, something went wrong. Please try again.";
+            }
+        };
+
+        checkBtn.addEventListener('click', async () => {
+            const symptoms = symptomsInput.value.trim();
+            if (symptoms === "") {
+                resultBox.innerHTML = '<p class="text-red-400">Please enter your symptoms.</p>';
+                return;
+            }
+
+            resultBox.innerHTML = '<p class="text-yellow-400">Checking your symptoms...</p>';
+
+            const prompt = `Provide general, non-medical information for the following symptoms. Include a clear disclaimer that this is not medical advice and the user should consult a doctor.
+            
+            Symptoms: ${symptoms}`;
+            const analysis = await makeApiCall(prompt);
+            resultBox.innerHTML = `<p>${analysis}</p>`;
+        });
+    </script>
+</body>
+</html>
