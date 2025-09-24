@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Data Visualizer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .container { max-width: 1000px; }
+        .card { background-color: #fff; box-shadow: 0 10px 20px rgba(0, 0, 0, 0.04); }
+        .btn-primary { background-color: #4f46e5; border-color: #4f46e5; }
+        .btn-primary:hover { background-color: #4338ca; border-color: #4338ca; }
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); z-index: 50;
+            display: flex; justify-content: center; align-items: center;
+        }
+        #chart-container { background-color: #f8f9fa; border: 1px solid #e5e7eb; }
+        #chart-svg {
+            /* Fix: Explicitly set dimensions for D3 to use */
+            width: 100%;
+            height: 400px;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+    <div class="container mx-auto">
+        <!-- Main UI Card -->
+        <div class="card rounded-2xl p-6 sm:p-10">
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">Dynamic Data Visualizer</h1>
+            <p class="text-sm text-gray-500 mb-6">
+                Paste your data below (separated by commas or new lines) and choose a chart type to generate a visualization.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Input Section -->
+                <div>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="dataInput" class="block text-sm font-semibold text-gray-700 mb-1">
+                                Enter or paste your data:
+                            </label>
+                            <textarea id="dataInput" placeholder="e.g., Apple:10, Orange:15, Banana:7" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow min-h-[150px]"></textarea>
+                        </div>
+        
+                        <div>
+                            <label for="chartType" class="block text-sm font-semibold text-gray-700 mb-1">
+                                Select Chart Type:
+                            </label>
+                            <select id="chartType" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
+                                <option value="bar">Bar Chart</option>
+                                <option value="pie">Pie Chart</option>
+                                <option value="line">Line Chart</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- Action Buttons -->
+                    <div class="mt-8 flex justify-end space-x-4">
+                        <button id="visualizeBtn" class="px-6 py-3 bg-indigo-600 text-white rounded-lg shadow-md hover:bg-indigo-700 transition-colors font-semibold">
+                            Visualize Data
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Output Section -->
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800 mb-2">Your Visualization</h2>
+                    <div id="chart-container" class="rounded-lg p-4 overflow-hidden relative">
+                        <svg id="chart-svg" class="w-full h-auto"></svg>
+                    </div>
+                    <div id="loading" class="hidden text-center text-gray-500 mt-4">
+                        <p>Generating chart...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal/Message Box -->
+    <div id="messageBox" class="modal-overlay hidden" onclick="this.classList.add('hidden')">
+      <div class="bg-white rounded-xl p-6 max-w-sm w-full text-center shadow-lg" onclick="event.stopPropagation()">
+        <p id="messageText" class="text-gray-700 text-lg font-medium">Message Here</p>
+        <button class="mt-4 px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition-colors" onclick="document.getElementById('messageBox').classList.add('hidden')">OK</button>
+      </div>
+    </div>
+
+<script>
+    const dataInput = document.getElementById('dataInput');
+    const chartTypeSelect = document.getElementById('chartType');
+    const visualizeBtn = document.getElementById('visualizeBtn');
+    const chartContainer = document.getElementById('chart-container');
+    const chartSVG = document.getElementById('chart-svg');
+    const loadingDiv = document.getElementById('loading');
+    const messageBox = document.getElementById('messageBox');
+    const messageText = document.getElementById('messageText');
+
+    // Default data example
+    dataInput.value = "Apple:10, Orange:15, Banana:7, Grape:12, Cherry:9";
+
+    // Function to show a custom message box
+    function showMessage(text) {
+      messageText.textContent = text;
+      messageBox.classList.remove('hidden');
+    }
+
+    // Main function to parse data and draw the chart
+    visualizeBtn.addEventListener('click', () => {
+        const rawData = dataInput.value.trim();
+        if (!rawData) {
+            showMessage("Please enter some data to visualize.");
+            return;
+        }
+
+        loadingDiv.classList.remove('hidden');
+        chartContainer.classList.add('opacity-50');
+
+        try {
+            const data = parseData(rawData);
+            if (data.length === 0) {
+                showMessage("Could not parse data. Please use a 'key:value' format.");
+                return;
+            }
+
+            // Clear previous chart
+            d3.select(chartSVG).selectAll("*").remove();
+
+            const chartType = chartTypeSelect.value;
+            switch (chartType) {
+                case 'bar':
+                    drawBarChart(data);
+                    break;
+                case 'pie':
+                    drawPieChart(data);
+                    break;
+                case 'line':
+                    drawLineChart(data);
+                    break;
+                default:
+                    showMessage("Invalid chart type selected.");
+                    break;
+            }
+
+        } catch (error) {
+            showMessage("An error occurred during visualization. Please check your data format.");
+            console.error(error);
+        } finally {
+            loadingDiv.classList.add('hidden');
+            chartContainer.classList.remove('opacity-50');
+        }
+    });
+
+    // Parses input string into an array of objects
+    function parseData(input) {
+        const entries = input.split(/[\n,]/).map(d => d.trim()).filter(d => d.length > 0);
+        return entries.map(entry => {
+            const parts = entry.split(':').map(p => p.trim());
+            return {
+                label: parts[0],
+                value: parseFloat(parts[1]) || 0
+            };
+        });
+    }
+
+    // Draws a Bar Chart using D3.js
+    function drawBarChart(data) {
+        const margin = { top: 20, right: 20, bottom: 40, left: 40 };
+        const width = chartSVG.clientWidth - margin.left - margin.right;
+        const height = chartSVG.clientHeight - margin.top - margin.bottom;
+
+        const svg = d3.select(chartSVG)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        const x = d3.scaleBand()
+            .range([0, width])
+            .domain(data.map(d => d.label))
+            .padding(0.2);
+
+        const y = d3.scaleLinear()
+            .range([height, 0])
+            .domain([0, d3.max(data, d => d.value)]);
+
+        svg.append("g")
+            .attr("transform", `translate(0,${height})`)
+            .call(d3.axisBottom(x));
+
+        svg.append("g")
+            .call(d3.axisLeft(y));
+
+        svg.selectAll(".bar")
+            .data(data)
+            .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", d => x(d.label))
+            .attr("y", d => y(d.value))
+            .attr("width", x.bandwidth())
+            .attr("height", d => height - y(d.value))
+            .attr("fill", "#4f46e5");
+    }
+
+    // Draws a Pie Chart using D3.js
+    function drawPieChart(data) {
+        const width = chartSVG.clientWidth;
+        const height = chartSVG.clientHeight;
+        const radius = Math.min(width, height) / 2 - 20;
+
+        const svg = d3.select(chartSVG)
+            .append("g")
+            .attr("transform", `translate(${width / 2},${height / 2})`);
+
+        const color = d3.scaleOrdinal()
+            .domain(data.map(d => d.label))
+            .range(d3.schemeCategory10);
+
+        const pie = d3.pie().value(d => d.value);
+        const arc = d3.arc().innerRadius(0).outerRadius(radius);
+        const outerArc = d3.arc().innerRadius(radius * 0.9).outerRadius(radius * 0.9);
+
+        const arcs = svg.selectAll(".arc")
+            .data(pie(data))
+            .enter().append("g")
+            .attr("class", "arc");
+
+        arcs.append("path")
+            .attr("d", arc)
+            .attr("fill", d => color(d.data.label));
+
+        arcs.append("text")
+            .attr("transform", d => `translate(${outerArc.centroid(d)})`)
+            .attr("text-anchor", "middle")
+            .style("font-size", "10px")
+            .text(d => d.data.label);
+    }
+    
+    // Draws a Line Chart using D3.js
+    function drawLineChart(data) {
+        const margin = { top: 20, right: 20, bottom: 40, left: 40 };
+        const width = chartSVG.clientWidth - margin.left - margin.right;
+        const height = chartSVG.clientHeight - margin.top - margin.bottom;
+
+        const svg = d3.select(chartSVG)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+        
+        const x = d3.scalePoint()
+            .domain(data.map(d => d.label))
+            .range([0, width]);
+
+        const y = d3.scaleLinear()
+            .domain([0, d3.max(data, d => d.value)])
+            .range([height, 0]);
+
+        svg.append("g")
+            .attr("transform", `translate(0,${height})`)
+            .call(d3.axisBottom(x));
+
+        svg.append("g")
+            .call(d3.axisLeft(y));
+
+        const line = d3.line()
+            .x(d => x(d.label))
+            .y(d => y(d.value));
+
+        svg.append("path")
+            .datum(data)
+            .attr("fill", "none")
+            .attr("stroke", "#4f46e5")
+            .attr("stroke-width", 2)
+            .attr("d", line);
+
+        svg.selectAll(".dot")
+            .data(data)
+            .enter().append("circle")
+            .attr("class", "dot")
+            .attr("cx", d => x(d.label))
+            .attr("cy", d => y(d.value))
+            .attr("r", 4)
+            .attr("fill", "#4f46e5");
+    }
+
+</script>
+</body>
+</html>
