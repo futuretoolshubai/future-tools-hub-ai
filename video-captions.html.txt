@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Advanced Caption & Subtitle Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+    .container { max-width: 960px; }
+    .card { background-color: #fff; box-shadow: 0 10px 20px rgba(0, 0, 0, 0.04); }
+    .btn-primary { background-color: #4f46e5; border-color: #4f46e5; }
+    .btn-primary:hover { background-color: #4338ca; border-color: #4338ca; }
+    .output-box { background-color: #f8f8f8; }
+    textarea { min-height: 200px; }
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background-color: rgba(0, 0, 0, 0.5); z-index: 50;
+      display: flex; justify-content: center; align-items: center;
+    }
+  </style>
+</head>
+<body class="p-4 sm:p-8">
+  <div class="container mx-auto">
+    <!-- Main UI Card -->
+    <div class="card rounded-2xl p-6 sm:p-10">
+      <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">Video Caption & Subtitle Generator</h1>
+      <p class="text-sm text-gray-500 mb-6">
+        Generate professional SRT and VTT subtitles from your transcript text. The intelligent algorithm will automatically chunk your transcript into readable, timed subtitles.
+      </p>
+
+      <!-- Input Section -->
+      <div class="space-y-6">
+        <div>
+          <label for="transcript" class="block text-sm font-semibold text-gray-700 mb-1">
+            Upload or paste your full transcript:
+          </label>
+          <input type="file" id="fileInput" accept=".txt" class="block w-full text-sm text-gray-500 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none p-2 mb-2">
+          <textarea id="transcript" placeholder="Paste your transcript here..." class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow"></textarea>
+        </div>
+
+        <!-- Settings -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label for="wordsPer" class="block text-sm font-medium text-gray-700">Words per subtitle line</label>
+            <input type="number" id="wordsPer" value="12" min="5" max="25" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+          </div>
+          <div>
+            <label for="wpm" class="block text-sm font-medium text-gray-700">Estimated reading speed (WPM)</label>
+            <input type="number" id="wpm" value="160" min="100" max="300" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+          </div>
+          <div>
+            <label for="langLabel" class="block text-sm font-medium text-gray-700">Language tag (e.g., en, es, fr)</label>
+            <input type="text" id="langLabel" value="en" placeholder="en / es / fr" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="mt-8 flex justify-end space-x-4">
+        <button id="genBtn" class="px-6 py-3 bg-indigo-600 text-white rounded-lg shadow-md hover:bg-indigo-700 transition-colors font-semibold">
+          Generate SRT & VTT
+        </button>
+      </div>
+
+      <!-- Output Section -->
+      <div id="outputArea" class="mt-8 hidden">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-bold text-gray-800">Generated Files</h2>
+          <div id="links" class="flex space-x-2"></div>
+        </div>
+
+        <div id="preview" class="output-box rounded-lg p-4 border border-gray-200 max-h-96 overflow-y-auto"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal/Message Box -->
+  <div id="messageBox" class="modal-overlay hidden" onclick="this.classList.add('hidden')">
+    <div class="bg-white rounded-xl p-6 max-w-sm w-full text-center shadow-lg" onclick="event.stopPropagation()">
+      <p id="messageText" class="text-gray-700 text-lg font-medium">Message Here</p>
+      <button class="mt-4 px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition-colors" onclick="document.getElementById('messageBox').classList.add('hidden')">OK</button>
+    </div>
+  </div>
+
+<script>
+  const fileInput = document.getElementById('fileInput');
+  const transcriptEl = document.getElementById('transcript');
+  const genBtn = document.getElementById('genBtn');
+  const outputArea = document.getElementById('outputArea');
+  const linksDiv = document.getElementById('links');
+  const previewDiv = document.getElementById('preview');
+  const messageBox = document.getElementById('messageBox');
+  const messageText = document.getElementById('messageText');
+
+  // Pre-fill transcript with an example
+  transcriptEl.value = `Hello and welcome to the world of content creation. Today we're going to dive into the art of making perfect video captions. It all starts with a great transcript. A transcript is a written version of everything said in your video. The quality of your captions depends heavily on the accuracy of this initial text. Once you have your text, you can use a tool like this one to automatically generate timestamped subtitle files. This process, while simple in this demo, is a crucial part of making your content accessible and engaging for a wider audience. We hope this tool helps you on your journey to creating great content.`;
+
+  // Function to show a custom message box
+  function showMessage(text) {
+    messageText.textContent = text;
+    messageBox.classList.remove('hidden');
+  }
+
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => transcriptEl.value = reader.result;
+    reader.readAsText(file);
+  });
+
+  // Time conversion helper functions
+  function secondsToTimestamp(s) {
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = Math.floor(s % 60);
+    const ms = Math.floor((s - Math.floor(s)) * 1000);
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')},${String(ms).padStart(3, '0')}`;
+  }
+
+  function secondsToVttTimestamp(s) {
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = Math.floor(s % 60);
+    const ms = Math.floor((s - Math.floor(s)) * 1000);
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}.${String(ms).padStart(3, '0')}`;
+  }
+
+  // A "smarter" subtitle generation function that chunks based on a word count but tries to respect sentence endings.
+  function generateSubtitles(text, wordsPer = 12, wpm = 160) {
+    const cleanedText = text.replace(/\s+/g, ' ').trim();
+    if (cleanedText.length === 0) return [];
+    
+    // Split into sentences first, then words, for better natural breaks
+    const sentences = cleanedText.split(/(?<=[.?!])\s+/);
+    let allWords = [];
+    sentences.forEach(s => allWords = allWords.concat(s.split(' ')));
+    
+    const wordsPerSecond = wpm / 60;
+    const subtitles = [];
+    let wordIndex = 0;
+    let subtitleCounter = 1;
+    let lastEndTime = 0;
+
+    while (wordIndex < allWords.length) {
+      const startWordIndex = wordIndex;
+      let endWordIndex = Math.min(startWordIndex + wordsPer, allWords.length);
+
+      // Try to end the chunk at a sentence boundary if possible
+      for (let i = startWordIndex + 1; i < endWordIndex; i++) {
+        if (allWords[i].match(/[.?!]/)) {
+          endWordIndex = i + 1;
+          break;
+        }
+      }
+
+      const chunk = allWords.slice(startWordIndex, endWordIndex);
+      const chunkText = chunk.join(' ');
+      const durationSeconds = Math.max(1, chunk.length / wordsPerSecond);
+      const startTime = lastEndTime;
+      const endTime = startTime + durationSeconds;
+
+      subtitles.push({
+        id: subtitleCounter,
+        start: startTime,
+        end: endTime,
+        text: chunkText
+      });
+
+      lastEndTime = endTime;
+      wordIndex = endWordIndex;
+      subtitleCounter++;
+    }
+    return subtitles;
+  }
+
+  function makeSRT(subs) {
+    return subs.map(s => `${s.id}\n${secondsToTimestamp(s.start)} --> ${secondsToTimestamp(s.end)}\n${s.text}\n`).join('\n');
+  }
+
+  function makeVTT(subs) {
+    return 'WEBVTT\n\n' + subs.map(s => `${secondsToVttTimestamp(s.start)} --> ${secondsToVttTimestamp(s.end)}\n${s.text}\n`).join('\n');
+  }
+
+  function downloadFile(filename, content, mime = 'text/plain') {
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  genBtn.addEventListener('click', () => {
+    const text = transcriptEl.value.trim();
+    if (text.length < 10) {
+      showMessage('Please paste or upload a transcript (at least 10 characters).');
+      return;
+    }
+
+    const wordsPer = parseInt(document.getElementById('wordsPer').value, 10) || 12;
+    const wpm = parseInt(document.getElementById('wpm').value, 10) || 160;
+
+    const subs = generateSubtitles(text, wordsPer, wpm);
+    const srt = makeSRT(subs);
+    const vtt = makeVTT(subs);
+
+    // Make the download buttons and preview visible
+    outputArea.classList.remove('hidden');
+
+    // Update download links
+    linksDiv.innerHTML = `
+      <button onclick="downloadFile('subtitles.srt', \`${srt.replace(/`/g, '\\`')}\`)"
+              class="px-4 py-2 text-sm rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
+        Download SRT
+      </button>
+      <button onclick="downloadFile('subtitles.vtt', \`${vtt.replace(/`/g, '\\`')}\`)"
+              class="px-4 py-2 text-sm rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
+        Download VTT
+      </button>
+    `;
+
+    // Update the preview area
+    previewDiv.innerHTML = subs.map(s => `
+      <div class="border-b border-gray-100 p-3 text-sm">
+        <strong class="text-indigo-600">#${s.id}</strong> <span class="text-gray-500">(${secondsToVttTimestamp(s.start)} &rarr; ${secondsToVttTimestamp(s.end)})</span>
+        <div class="mt-1 text-gray-800">${escapeHtml(s.text)}</div>
+      </div>
+    `).join('');
+  });
+
+  // Helper function to escape HTML for preview
+  function escapeHtml(unsafe) {
+    return unsafe.replace(/[&<"'>]/g, (m) => {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+    });
+  }
+</script>
+</body>
+</html>
