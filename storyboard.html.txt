@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Storyboard Creator</title>
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            color: #1a202c;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        .input-field {
+            border: 2px solid #e2e8f0;
+            background-color: #f8fafc;
+        }
+        .input-field:focus {
+            border-color: #6366f1;
+            outline: none;
+        }
+        .panel-card {
+            background-color: #f8fafc;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+            border-left: 4px solid #4f46e5;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .panel-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+        }
+        .output-container {
+            animation: fadeIn 0.5s ease-in-out forwards;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
+
+    <div class="container mx-auto p-8 card max-w-5xl">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-extrabold text-gray-800 mb-2">
+                Digital Storyboard Creator
+            </h1>
+            <p class="text-gray-600 text-lg">
+                Instantly turn your story ideas into a visual storyboard.
+            </p>
+        </header>
+
+        <section class="space-y-6">
+            <!-- Input and controls -->
+            <div class="space-y-4">
+                <div>
+                    <label for="story-idea-input" class="block text-gray-700 font-semibold mb-2">
+                        Enter a short story idea or scene
+                    </label>
+                    <textarea id="story-idea-input" rows="4" placeholder='e.g., "A brave soldier approaches a dragon\'s cave at dawn."' class="w-full p-4 rounded-lg input-field transition-colors resize-none"></textarea>
+                </div>
+            </div>
+
+            <button
+                id="generate-button"
+                class="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:from-purple-600 hover:to-indigo-700 transition-all duration-300 transform hover:scale-105"
+            >
+                Generate Storyboard
+            </button>
+
+            <!-- Loading indicator -->
+            <div id="loading-indicator" class="hidden text-center text-gray-500 text-lg py-4">
+                <div class="flex items-center justify-center">
+                    <svg class="animate-spin -ml-1 mr-3 h-6 w-6 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Creating your storyboard...
+                </div>
+            </div>
+
+            <!-- Output sections -->
+            <div id="panels-container" class="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8"></div>
+
+            <!-- Message box for errors -->
+            <div id="message-box" class="fixed inset-0 flex items-center justify-center hidden bg-gray-900 bg-opacity-50 z-50">
+                <div class="bg-gray-800 p-6 rounded-xl shadow-2xl text-center max-w-sm w-full">
+                    <p id="message-text" class="text-lg font-medium text-white mb-4"></p>
+                    <button id="close-message" class="bg-purple-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors">OK</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const storyIdeaInput = document.getElementById('story-idea-input');
+        const generateButton = document.getElementById('generate-button');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const panelsContainer = document.getElementById('panels-container');
+        const messageBox = document.getElementById('message-box');
+        const messageText = document.getElementById('message-text');
+        const closeMessageButton = document.getElementById('close-message');
+        const apiKey = ""; // Canvas will automatically provide a key for API calls
+
+        function showMessage(message) {
+            messageText.textContent = message;
+            messageBox.classList.remove('hidden');
+        }
+
+        closeMessageButton.addEventListener('click', () => {
+            messageBox.classList.add('hidden');
+        });
+
+        // Exponential backoff retry function for API calls
+        async function fetchWithRetry(url, options, retries = 3, delay = 1000) {
+            try {
+                const response = await fetch(url, options);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response;
+            } catch (error) {
+                if (retries > 0) {
+                    await new Promise(res => setTimeout(res, delay));
+                    return fetchWithRetry(url, options, retries - 1, delay * 2);
+                } else {
+                    throw error;
+                }
+            }
+        }
+
+        generateButton.addEventListener('click', async () => {
+            const storyIdea = storyIdeaInput.value.trim();
+
+            if (!storyIdea) {
+                showMessage("Please enter a story idea to generate a storyboard.");
+                return;
+            }
+
+            loadingIndicator.classList.remove('hidden');
+            panelsContainer.innerHTML = '';
+            
+            try {
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                
+                const systemPrompt = `You are a professional storyboard artist. Generate a 6-panel visual storyboard from a short story idea.
+
+                For each panel, return the following details as a JSON object:
+                - panelNumber (number)
+                - title (short title for the panel)
+                - visualDescription (what the viewer sees in the shot)
+                - cameraAngle (e.g., Wide Shot, Close-Up, Low Angle)
+                - durationSeconds (suggested time for the shot)
+                - notesAndKeywords (brief notes on lighting, mood, and sketch keywords for a thumbnail).
+
+                Format your response as a single JSON object with a "storyboard" key containing an array of these objects.`;
+
+                const payload = {
+                    contents: [{ parts: [{ text: `Story idea: "${storyIdea}"` }] }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                    }
+                };
+
+                const response = await fetchWithRetry(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (!jsonText) {
+                    throw new Error("Failed to get a valid response from the API.");
+                }
+
+                const data = JSON.parse(jsonText);
+                const panels = data.storyboard;
+                
+                if (panels && Array.isArray(panels)) {
+                    panels.forEach(panel => {
+                        const panelDiv = document.createElement('div');
+                        panelDiv.className = 'panel-card space-y-3 output-container';
+                        panelDiv.innerHTML = `
+                            <div class="flex items-baseline justify-between">
+                                <h3 class="text-xl font-bold text-gray-800">Panel ${panel.panelNumber}: ${panel.title || ''}</h3>
+                                <span class="text-sm text-gray-500">${panel.durationSeconds || 'N/A'}s</span>
+                            </div>
+                            <p class="text-gray-700 leading-relaxed"><span class="font-semibold text-gray-900">Visual:</span> ${panel.visualDescription || 'N/A'}</p>
+                            <p class="text-gray-600"><span class="font-semibold text-gray-800">Camera:</span> ${panel.cameraAngle || 'N/A'}</p>
+                            <p class="text-sm text-gray-500 italic"><span class="font-semibold text-gray-700">Notes:</span> ${panel.notesAndKeywords || 'N/A'}</p>
+                        `;
+                        panelsContainer.appendChild(panelDiv);
+                    });
+                } else {
+                     panelsContainer.innerHTML = '<p class="text-center text-gray-500">No storyboard panels were generated. Try a different story idea.</p>';
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage("An error occurred. Please try again or check the console for details.");
+            } finally {
+                loadingIndicator.classList.add('hidden');
+            }
+        });
+    </script>
+
+</body>
+</html>
