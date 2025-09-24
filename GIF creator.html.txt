@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Animated GIF Creator</title>
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c; /* Dark background */
+            color: #e2e8f0; /* Light text */
+        }
+        .card {
+            background-color: #2d3748; /* Darker card color */
+            border-radius: 1rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        canvas {
+            background-color: #000;
+            border-radius: 1rem;
+            border: 2px solid #4a5568;
+            width: 100%;
+            height: auto;
+            max-width: 600px;
+            aspect-ratio: 1 / 1;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
+
+    <!-- Main application container -->
+    <div class="container mx-auto p-8 card max-w-2xl">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-extrabold text-white mb-2">
+                Simple Animated GIF Creator
+            </h1>
+            <p class="text-gray-400 text-lg">
+                Enter a phrase to create a simple animated sketch.
+            </p>
+        </header>
+
+        <section class="space-y-6">
+            <div class="space-y-2">
+                <label for="prompt-input" class="text-gray-300 font-semibold text-lg">
+                    Describe your animation:
+                </label>
+                <textarea
+                    id="prompt-input"
+                    placeholder="e.g., a rocket blasting off"
+                    class="w-full p-4 border-2 border-gray-600 bg-gray-700 text-white rounded-xl focus:outline-none focus:border-indigo-500 transition-colors input-area resize-none"
+                    rows="3"
+                ></textarea>
+            </div>
+
+            <button
+                id="generate-button"
+                class="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:from-purple-600 hover:to-indigo-700 transition-all duration-300 transform hover:scale-105"
+            >
+                Generate GIF
+            </button>
+
+            <div id="loading-indicator" class="hidden text-center text-gray-400 text-lg py-4">
+                <div class="flex items-center justify-center">
+                    <svg class="animate-spin -ml-1 mr-3 h-6 w-6 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Creating animation...
+                </div>
+            </div>
+
+            <!-- Canvas for the animated output -->
+            <div class="flex justify-center mt-6">
+                <canvas id="gif-canvas"></canvas>
+            </div>
+
+            <div class="text-center mt-4">
+                <button
+                    id="download-button"
+                    class="hidden bg-gray-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:bg-gray-700 transition-all duration-300"
+                >
+                    Download GIF
+                </button>
+            </div>
+
+            <!-- Message box for mock messages and errors -->
+            <div id="message-box" class="fixed inset-0 flex items-center justify-center hidden bg-gray-900 bg-opacity-50 z-50">
+                <div class="bg-gray-800 p-6 rounded-xl shadow-2xl text-center max-w-sm w-full">
+                    <p id="message-text" class="text-lg font-medium text-white mb-4"></p>
+                    <button id="close-message" class="bg-purple-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors">OK</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const generateButton = document.getElementById('generate-button');
+        const downloadButton = document.getElementById('download-button');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const promptInput = document.getElementById('prompt-input');
+        const canvas = document.getElementById('gif-canvas');
+        const ctx = canvas.getContext('2d');
+        const messageBox = document.getElementById('message-box');
+        const messageText = document.getElementById('message-text');
+        const closeMessageButton = document.getElementById('close-message');
+
+        let animationFrameId;
+        const cursorPositions = [];
+        const maxCursorTrail = 30;
+        let animationColor = '#6366f1';
+        let animationSpeed = 0.1;
+
+        function showMessage(message) {
+            messageText.textContent = message;
+            messageBox.classList.remove('hidden');
+        }
+
+        closeMessageButton.addEventListener('click', () => {
+            messageBox.classList.add('hidden');
+        });
+
+        // This is a mock animation function. It creates a simple, looping drawing.
+        // In a real tool, an AI model would generate a sequence of images.
+        function animateMockDrawing() {
+            let frame = 0;
+            const maxFrames = 100;
+            const canvasSize = canvas.width;
+
+            function draw() {
+                // Clear the canvas for the next frame
+                ctx.clearRect(0, 0, canvasSize, canvasSize);
+
+                // Draw a simple shape that animates
+                const x = canvasSize / 2 + Math.sin(frame * animationSpeed) * (canvasSize / 4);
+                const y = canvasSize / 2 + Math.cos(frame * animationSpeed * 1.5) * (canvasSize / 4);
+                const radius = 20 + Math.sin(frame * animationSpeed * 2) * 10;
+
+                ctx.fillStyle = animationColor;
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Draw a simple star shape
+                ctx.fillStyle = '#e2e8f0';
+                const starRadius = 50;
+                const innerRadius = 20;
+                const points = 5;
+                ctx.beginPath();
+                for (let i = 0; i < points * 2; i++) {
+                    const currentRadius = (i % 2 === 0) ? starRadius : innerRadius;
+                    const angle = Math.PI / points * i;
+                    const starX = canvasSize / 2 + Math.cos(angle) * currentRadius;
+                    const starY = canvasSize / 2 + Math.sin(angle) * currentRadius;
+                    if (i === 0) {
+                        ctx.moveTo(starX, starY);
+                    } else {
+                        ctx.lineTo(starX, starY);
+                    }
+                }
+                ctx.closePath();
+                ctx.fill();
+
+                frame++;
+                if (frame >= maxFrames) {
+                    frame = 0; // Loop the animation
+                }
+
+                // Draw the cursor trail
+                for(let i = 0; i < cursorPositions.length; i++) {
+                    const alpha = (i / maxCursorTrail);
+                    ctx.fillStyle = `rgba(255, 0, 0, ${alpha})`;
+                    const pos = cursorPositions[i];
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                animationFrameId = requestAnimationFrame(draw);
+            }
+
+            draw();
+        }
+
+        // Set the initial canvas size based on its container
+        function setCanvasSize() {
+            const container = canvas.parentElement;
+            canvas.width = container.offsetWidth;
+            canvas.height = container.offsetWidth;
+        }
+
+        // Draw a static pattern on the canvas when the page first loads
+        function drawInitialState() {
+            setCanvasSize();
+            const canvasSize = canvas.width;
+
+            // Draw a central circle
+            ctx.fillStyle = '#6366f1';
+            ctx.beginPath();
+            ctx.arc(canvasSize / 2, canvasSize / 2, 80, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw a few concentric rings
+            ctx.strokeStyle = '#4a5568';
+            ctx.lineWidth = 4;
+            for (let i = 1; i <= 3; i++) {
+                ctx.beginPath();
+                ctx.arc(canvasSize / 2, canvasSize / 2, 80 + i * 20, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            // Add text to guide the user
+            ctx.fillStyle = '#e2e8f0';
+            ctx.font = '24px Inter';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('Ready to Animate', canvasSize / 2, canvasSize / 2);
+
+            ctx.font = '16px Inter';
+            ctx.fillText('Move your mouse to see the red cursor effect', canvasSize / 2, canvasSize / 2 + 120);
+        }
+
+        window.onload = function () {
+            drawInitialState();
+        }
+
+        window.addEventListener('resize', drawInitialState);
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            cursorPositions.push({x, y});
+            if (cursorPositions.length > maxCursorTrail) {
+                cursorPositions.shift();
+            }
+        });
+
+        generateButton.addEventListener('click', async () => {
+            const prompt = promptInput.value.trim();
+            if (prompt === '') {
+                showMessage('Please enter a description to generate an animation.');
+                return;
+            }
+
+            // Change animation parameters based on the prompt
+            if (prompt.toLowerCase().includes('rocket')) {
+                animationColor = '#ef4444'; // Red
+                animationSpeed = 0.2;
+            } else if (prompt.toLowerCase().includes('ball')) {
+                animationColor = '#3b82f6'; // Blue
+                animationSpeed = 0.05;
+            } else {
+                animationColor = '#6366f1'; // Default Indigo
+                animationSpeed = 0.1;
+            }
+
+
+            // Stop any existing animation
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+
+            loadingIndicator.classList.remove('hidden');
+            downloadButton.classList.add('hidden');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Simulate the AI generation process
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            loadingIndicator.classList.add('hidden');
+            downloadButton.classList.remove('hidden');
+            
+            // Start the mock animation
+            animateMockDrawing();
+        });
+
+        downloadButton.addEventListener('click', () => {
