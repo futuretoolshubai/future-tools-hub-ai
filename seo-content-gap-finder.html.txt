@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ایس ای او کانٹینٹ گیپ فائنڈر</title>
+    <!-- Inter font from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg-color: #0c0a1a;
+            --container-bg: #1e1b2f;
+            --card-bg: #2d2940;
+            --text-color: #e0e7ff;
+            --primary-color: #6d28d9; /* Deep Purple */
+            --accent-color: #a78bfa; /* Lighter Purple */
+            --border-color: #4a3e63;
+            --low-comp: #4ade80; /* Green */
+            --medium-comp: #facc15; /* Yellow */
+            --high-comp: #ef4444; /* Red */
+        }
+        body {
+            font-family: 'Inter', 'Noto Nastaliq Urdu', sans-serif;
+            background: radial-gradient(circle at center, #1a1538, #0c0a1a);
+            color: var(--text-color);
+            transition: background-color 0.3s ease;
+        }
+        .container-wrapper {
+            background-color: var(--container-bg);
+            border-radius: 2rem;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            max-width: 60rem;
+            margin: 2rem auto;
+            padding: 3rem;
+            border: 1px solid var(--border-color);
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+        .unique-btn {
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            color: white;
+            padding: 1rem 2.5rem;
+            border-radius: 9999px;
+            font-weight: bold;
+            font-size: 1.125rem;
+            letter-spacing: 0.05em;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(109, 40, 217, 0.4);
+            cursor: pointer;
+        }
+        .unique-btn:hover {
+            transform: scale(1.05) translateY(-5px);
+            box-shadow: 0 12px 35px rgba(109, 40, 217, 0.6);
+        }
+        .unique-btn:active {
+            transform: scale(0.95) translateY(0);
+            box-shadow: 0 4px 15px rgba(109, 40, 217, 0.4);
+        }
+        .unique-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: skewX(-30deg);
+            transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .unique-btn:hover::before {
+            left: 120%;
+        }
+        .input-field, .textarea-field {
+            background-color: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 1rem;
+            color: var(--text-color);
+            transition: all 0.3s ease-in-out;
+        }
+        .input-field:focus, .textarea-field:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.5);
+        }
+        .competitor-tag {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 9999px;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .competitor-tag:hover {
+            background-color: var(--accent-color);
+        }
+        .result-card {
+            background-color: var(--card-bg);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s ease;
+            transform-style: preserve-3d;
+        }
+        .result-card:hover {
+            transform: translateY(-5px);
+        }
+        .comp-low { color: var(--low-comp); }
+        .comp-medium { color: var(--medium-comp); }
+        .comp-high { color: var(--high-comp); }
+        .lang-dropdown {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .lang-dropdown a:hover {
+            background-color: var(--border-color);
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(12, 10, 26, 0.9);
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        .loading-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .loader {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: inline-block;
+            border-top: 5px solid var(--accent-color);
+            border-right: 5px solid transparent;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loader mb-8"></div>
+        <p id="loading-text" class="text-xl md:text-2xl font-bold text-gray-400"></p>
+    </div>
+
+    <div class="container-wrapper">
+        <!-- Language Switcher & Back to home link -->
+        <div class="flex justify-between items-center mb-6">
+            <a href="index.html" class="text-gray-400 hover:text-gray-200 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+            </a>
+            <div class="relative">
+                <button id="lang-btn" class="bg-gray-700 text-gray-300 px-5 py-2 rounded-full text-sm font-semibold hover:bg-gray-600 transition-colors focus:outline-none">
+                    Language
+                </button>
+                <div id="lang-dropdown" class="absolute right-0 mt-2 w-40 rounded-md lang-dropdown hidden z-10">
+                    <a href="#" class="block px-4 py-2 text-sm text-gray-300 hover:text-white" data-lang="en">English</a>
+                    <a href="#" class="block px-4 py-2 text-sm text-gray-300 hover:text-white" data-lang="ur">اردو</a>
+                    <a href="#" class="block px-4 py-2 text-sm text-gray-300 hover:text-white" data-lang="es">Español</a>
+                    <a href="#" class="block px-4 py-2 text-sm text-gray-300 hover:text-white" data-lang="fr">Français</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tool title and description -->
+        <header class="text-center mb-8">
+            <h1 id="main-title" class="text-4xl md:text-5xl font-extrabold text-white mb-4">
+                ایس ای او کانٹینٹ گیپ فائنڈر
+            </h1>
+            <p id="description" class="text-gray-400 text-lg md:text-xl leading-relaxed">
+                یہ ٹول آپ کی ویب سائٹ کو اسکین کرتا ہے اور یہ بتاتا ہے کہ آپ کے حریفوں کے مقابلے میں کون سے اہم keywords اور topics آپ نے چھوڑ دیے ہیں۔
+            </p>
+        </header>
+
+        <!-- Input Area -->
+        <div class="space-y-6">
+            <div>
+                <label id="label-user-site" for="userSite" class="block text-gray-300 font-bold mb-2">اپنی ویب سائٹ کا URL درج کریں:</label>
+                <input type="url" id="userSite" class="input-field w-full px-4 py-3" placeholder="مثال کے طور پر: https://www.yourblog.com" />
+            </div>
+
+            <div>
+                <label id="label-competitors" for="competitorInput" class="block text-gray-300 font-bold mb-2">حریف کی ویب سائٹس درج کریں (ایک ایک کرکے):</label>
+                <div class="flex space-x-2 rtl:space-x-reverse">
+                    <input type="url" id="competitorInput" class="input-field flex-grow px-4 py-3" placeholder="مثال کے طور پر: https://competitor1.com" />
+                    <button id="addCompetitorBtn" class="unique-btn px-6 py-2 text-xl">+</button>
+                </div>
+                <div id="competitorTags" class="flex flex-wrap gap-2 mt-4 rtl:justify-end"></div>
+            </div>
+            
+            <div id="findGapsBtn" class="unique-btn w-full text-center">خلا تلاش کریں</div>
+            
+            <!-- Output area -->
+            <div class="mt-8">
+                <h2 id="results-title" class="text-2xl font-bold text-white mb-4">کنٹینٹ میں خلا:</h2>
+                <div id="gapResults" class="output-box flex flex-col items-center justify-center p-6 text-center text-gray-400 transition-opacity duration-500 ease-in-out" style="min-height: 200px;">
+                    <p id="placeholder-text">شروع کرنے کے لیے، اپنی ویب سائٹ اور حریفوں کی سائٹس درج کریں۔</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const __apiKey = ""; // API key is handled by the environment
+        const findGapsBtn = document.getElementById('findGapsBtn');
+        const userSiteInput = document.getElementById('userSite');
+        const competitorInput = document.getElementById('competitorInput');
+        const addCompetitorBtn = document.getElementById('addCompetitorBtn');
+        const competitorTagsDiv = document.getElementById('competitorTags');
+        const gapResultsDiv = document.getElementById('gapResults');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const langBtn = document.getElementById('lang-btn');
+        const langDropdown = document.getElementById('lang-dropdown');
+        let competitors = [];
+        
+        const elements = {
+            'main-title': {
+                en: 'AI SEO Content Gap Finder',
+                ur: 'ایس ای او کانٹینٹ گیپ فائنڈر',
+                es: 'Buscador de brechas de contenido SEO',
+                fr: 'Outil de recherche d\'écarts de contenu SEO'
+            },
+            'description': {
+                en: 'This tool scans your website and tells you which important keywords and topics you\'ve missed, while your competitors have used them.',
+                ur: 'یہ ٹول آپ کی ویب سائٹ کو اسکین کرتا ہے اور یہ بتاتا ہے کہ آپ کے حریفوں کے مقابلے میں کون سے اہم keywords اور topics آپ نے چھوڑ دیے ہیں۔',
+                es: 'Esta herramienta escanea su sitio web y le dice qué palabras clave y temas importantes ha perdido, mientras que sus competidores los han utilizado.',
+                fr: 'Cet outil scanne votre site Web et vous indique les mots-clés et les sujets importants que vous avez manqués, alors que vos concurrents les ont utilisés.'
+            },
+            'label-user-site': {
+                en: 'Enter your website URL:',
+                ur: 'اپنی ویب سائٹ کا URL درج کریں:',
+                es: 'Ingrese la URL de su sitio web:',
+                fr: 'Entrez l\'URL de votre site Web:'
+            },
+            'label-competitors': {
+                en: 'Enter competitor websites (one by one):',
+                ur: 'حریف کی ویب سائٹس درج کریں (ایک ایک کرکے):',
+                es: 'Ingrese los sitios web de la competencia (uno por uno):',
+                fr: 'Entrez les sites Web des concurrents (un par un):'
+            },
+            'findGapsBtn': {
+                en: 'Find Gaps',
+                ur: 'خلا تلاش کریں',
+                es: 'Encontrar brechas',
+                fr: 'Trouver des lacunes'
+            },
+            'results-title': {
+                en: 'Content Gaps:',
+                ur: 'کنٹینٹ میں خلا:',
+                es: 'Brechas de contenido:',
+                fr: 'Lacunes de contenu:'
+            },
+            'placeholder-text': {
+                en: 'Please enter your website and competitor sites to begin...',
+                ur: 'شروع کرنے کے لیے، اپنی ویب سائٹ اور حریفوں کی سائٹس درج کریں۔',
+                es: 'Por favor, ingrese su sitio web y los sitios de la competencia para comenzar...',
+                fr: 'Veuillez entrer votre site Web et ceux de vos concurrents pour commencer...'
+            },
+            'input-placeholder-site': {
+                en: 'e.g., https://www.yourblog.com',
+                ur: 'مثال کے طور پر: https://www.yourblog.com',
+                es: 'ej., https://www.yourblog.com',
+                fr: 'par ex., https://www.votreblog.com'
+            },
+            'input-placeholder-comp': {
+                en: 'e.g., https://competitor1.com',
+                ur: 'مثال کے طور پر: https://competitor1.com',
+                es: 'ej., https://competidor1.com',
+                fr: 'par ex., https://concurrent1.com'
+            },
+            'loading-text-1': { en: 'Analyzing your website...', ur: 'آپ کی ویب سائٹ کا تجزیہ ہو رہا ہے...', es: 'Analizando su sitio web...', fr: 'Analyse de votre site Web...' },
+            'loading-text-2': { en: 'Comparing with competitor sites...', ur: 'حریفوں کی سائٹس سے موازنہ کیا جا رہا ہے...', es: 'Comparando con los sitios de la competencia...', fr: 'Comparaison avec les sites concurrents...' },
+            'loading-text-3': { en: 'Generating report...', ur: 'رپورٹ تیار کی جا رہی ہے...', es: 'Generando informe...', fr: 'Génération du rapport...' },
+            'error-message': { en: 'Please enter a valid URL.', ur: 'براہ کرم ایک درست URL درج کریں۔', es: 'Por favor, ingrese una URL válida.', fr: 'Veuillez entrer une URL valide.' },
+            'api-error': { en: 'Sorry, something went wrong. Please try again later.', ur: 'معذرت، کچھ غلط ہو گیا ہے۔ براہ کرم بعد میں دوبارہ کوشش کریں۔', es: 'Lo siento, algo salió mal. Por favor, inténtelo de nuevo más tarde.', fr: 'Désolé, quelque chose a mal tourné. Veuillez réessayer plus tard.' }
+        };
+
+        const icons = {
+            low: '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>',
+            medium: '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.328a1 1 0 01.464-.328l4.496-1.5a1 1 0 011.139.721L18 8.125l-2.735 4.558a1 1 0 01-1.397.359l-4.223-2.534a1 1 0 01-.482-.693l-1.042-4.168a1 1 0 01.328-.464zM16 11.25a.75.75 0 00-1.5 0v3.5a.75.75 0 001.5 0v-3.5zM12.5 11.25a.75.75 0 00-1.5 0v3.5a.75.75 0 001.5 0v-3.5zM9 11.25a.75.75 0 00-1.5 0v3.5a.75.75 0 001.5 0v-3.5zM5.5 11.25a.75.75 0 00-1.5 0v3.5a.75.75 0 001.5 0v-3.5z" clip-rule="evenodd" /></svg>',
+            high: '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>'
+        };
+
+        function setLanguage(lang) {
+            document.documentElement.lang = lang;
+            document.body.dir = lang === 'ur' ? 'rtl' : 'ltr';
+            document.getElementById('main-title').textContent = elements['main-title'][lang];
+            document.getElementById('description').textContent = elements['description'][lang];
+            document.getElementById('label-user-site').textContent = elements['label-user-site'][lang];
+            document.getElementById('label-competitors').textContent = elements['label-competitors'][lang];
+            document.getElementById('findGapsBtn').textContent = elements['findGapsBtn'][lang];
+            document.getElementById('results-title').textContent = elements['results-title'][lang];
+            document.getElementById('placeholder-text').textContent = elements['placeholder-text'][lang];
+            userSiteInput.placeholder = elements['input-placeholder-site'][lang];
+            competitorInput.placeholder = elements['input-placeholder-comp'][lang];
+        }
+
+        langBtn.addEventListener('click', (event) => {
+            langDropdown.classList.toggle('hidden');
+            event.stopPropagation();
+        });
+
+        langDropdown.addEventListener('click', (event) => {
+            const lang = event.target.dataset.lang;
+            if (lang) {
+                setLanguage(lang);
+                langDropdown.classList.add('hidden');
+            }
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!langDropdown.classList.contains('hidden') && !langDropdown.contains(event.target) && event.target !== langBtn) {
+                langDropdown.classList.add('hidden');
+            }
+        });
+
+        addCompetitorBtn.addEventListener('click', () => {
+            const url = competitorInput.value.trim();
+            if (url && !competitors.includes(url)) {
+                competitors.push(url);
+                renderCompetitorTags();
+                competitorInput.value = '';
+            }
+        });
+
+        function renderCompetitorTags() {
+            competitorTagsDiv.innerHTML = '';
+            competitors.forEach((url, index) => {
+                const tag = document.createElement('div');
+                tag.className = 'competitor-tag flex items-center justify-between space-x-2 rtl:space-x-reverse';
+                tag.innerHTML = `
+                    <span>${url}</span>
+                    <button class="remove-tag text-xs font-bold leading-none ml-2 rtl:ml-0 rtl:mr-2" data-index="${index}">&times;</button>
+                `;
+                tag.querySelector('.remove-tag').addEventListener('click', (e) => {
+                    const indexToRemove = e.target.getAttribute('data-index');
+                    competitors.splice(indexToRemove, 1);
+                    renderCompetitorTags();
+                });
+                competitorTagsDiv.appendChild(tag);
+            });
+        }
+
+        const loadingMessages = [
+            'Analyzing your website...', 'Comparing with competitor sites...', 'Identifying content gaps...',
+            'Generating your personalized report...', 'Almost there...'
+        ];
+        const urduLoadingMessages = [
+            'آپ کی ویب سائٹ کا تجزیہ ہو رہا ہے...', 'حریفوں کی سائٹس سے موازنہ کیا جا رہا ہے...', 'کنٹینٹ میں خلا کی نشاندہی کی جا رہی ہے...',
+            'آپ کی ذاتی رپورٹ تیار کی جا رہی ہے...', 'بس ایک لمحہ، کام تقریباً مکمل ہے...'
+        ];
+        let messageIndex = 0;
+        let loadingInterval;
+
+        function showLoading() {
+            loadingOverlay.classList.add('visible');
+            const messages = document.documentElement.lang === 'ur' ? urduLoadingMessages : loadingMessages;
+            const loadingTextEl = document.getElementById('loading-text');
+            loadingTextEl.textContent = messages[messageIndex];
+            loadingInterval = setInterval(() => {
+                messageIndex = (messageIndex + 1) % messages.length;
+                loadingTextEl.textContent = messages[messageIndex];
+            }, 2000);
+        }
+
+        function hideLoading() {
+            clearInterval(loadingInterval);
+            loadingOverlay.classList.remove('visible');
+        }
+
+        const makeApiCall = async (prompt) => {
+            const apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=" + __apiKey;
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "ARRAY",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                "keyword": { "type": "STRING" },
+                                "explanation": { "type": "STRING" },
+                                "competition": { "type": "STRING", "enum": ["low", "medium", "high"] }
+                            }
+                        }
+                    }
+                }
+            };
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                const jsonText = result.candidates[0].content.parts[0].text;
+                return JSON.parse(jsonText);
+            } catch (error) {
+                console.error("API Call Error:", error);
+                return null;
+            }
+        };
+
+        findGapsBtn.addEventListener('click', async () => {
+            const site = userSiteInput.value.trim();
+            const lang = document.documentElement.lang;
+
+            if (!site || competitors.length === 0) {
+                gapResultsDiv.innerHTML = `<p class="text-red-400 font-semibold">${elements['error-message'][lang]}</p>`;
+                return;
+            }
+
+            showLoading();
+
+            const prompt = `Act as an expert SEO analyst. Analyze the provided website URL and a list of competitor URLs. Identify 3-5 high-value keywords and topics that the user's website is missing but their competitors are using. Provide a brief explanation and an estimated competition level for each missing keyword. Format the output as a JSON array of objects with the keys "keyword", "explanation", and "competition".
+
+            My website: ${site}
+            Competitors: ${competitors.join(', ')}`;
+
+            const analysis = await makeApiCall(prompt);
+            
+            hideLoading();
+
+            if (analysis && analysis.length > 0) {
+                gapResultsDiv.innerHTML = '';
+                analysis.forEach(gap => {
+                    const card = document.createElement('div');
+                    card.className = 'result-card w-full flex flex-col md:flex-row items-start md:items-center justify-between';
+                    
+                    const compClass = `comp-${gap.competition.toLowerCase()}`;
+                    const iconSvg = icons[gap.competition.toLowerCase()] || '';
+
+                    card.innerHTML = `
+                        <div class="flex-grow">
+                            <h3 class="flex items-center text-xl font-bold mb-2">
+                                ${iconSvg}
+                                <span class="${compClass}">${gap.keyword}</span>
+                                <span class="text-sm font-normal ml-3 rtl:ml-0 rtl:mr-3 text-gray-400">(${gap.competition.toLowerCase()} competition)</span>
+                            </h3>
+                            <p class="text-gray-400 leading-relaxed">${gap.explanation}</p>
+                        </div>
+                    `;
+                    gapResultsDiv.appendChild(card);
+                });
+            } else {
+                gapResultsDiv.innerHTML = `<p class="text-gray-400">${elements['api-error'][lang]}</p>`;
+            }
+        });
+
+        // Set initial language on page load
+        setLanguage('ur');
+    </script>
+</body>
+</html>
