@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Meeting Assistant</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #111827;
+      color: #e5e7eb;
+    }
+    .gradient-bg {
+      background-image: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+    }
+    .input-box, .output-box {
+      background-color: #1f2937;
+      border: 1px solid #374151;
+      color: #d1d5db;
+    }
+    .copy-btn {
+      transition: all 0.2s;
+    }
+    .copy-btn:hover {
+      background-color: #4b5563;
+    }
+    .spinner {
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top: 4px solid #fff;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body class="p-4 sm:p-8 flex items-center justify-center min-h-screen">
+  <div class="w-full max-w-4xl p-6 md:p-10 rounded-3xl shadow-2xl gradient-bg border border-gray-700">
+    <div class="flex justify-between items-start mb-4">
+      <div>
+        <h1 class="text-3xl sm:text-4xl font-bold text-gray-100">AI Meeting Assistant</h1>
+        <p class="text-gray-400 mt-2">Paste meeting transcript to get summary, decisions & action items.</p>
+        <p id="userIdDisplay" class="text-sm mt-2 text-gray-500"></p>
+      </div>
+      <a href="index.html" class="text-gray-400 hover:text-gray-200 transition-colors duration-200">&larr; Back</a>
+    </div>
+
+    <textarea id="transcript" rows="10" class="input-box w-full p-4 mt-6 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200" placeholder="Paste meeting transcript here..."></textarea>
+
+    <div class="flex items-center justify-between mt-4">
+      <div class="relative w-1/2">
+        <select id="language-select" class="block appearance-none w-full bg-gray-700 border border-gray-600 text-gray-200 py-3 px-4 pr-8 rounded-xl leading-tight focus:outline-none focus:bg-gray-600 focus:border-blue-500">
+          <option value="en-US">English</option>
+          <option value="ur-PK">Urdu</option>
+          <option value="es-US">Spanish</option>
+          <option value="fr-FR">French</option>
+        </select>
+        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+          <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15 9.707l-5-5-1.414 1.414L12.586 10H4v2h8.586l-3.293 3.293z"/></svg>
+        </div>
+      </div>
+      <button id="analyzeBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transform transition-transform duration-200 hover:scale-105 flex items-center justify-center" onclick="processTranscript()">
+        <span id="buttonText">Analyze Meeting</span>
+        <div id="spinner" class="hidden ml-2 spinner"></div>
+      </button>
+    </div>
+
+    <div id="meetingResult" class="output-box w-full p-6 mt-6 rounded-xl">
+      <div id="statusMessage" class="text-gray-400 text-center">Paste a transcript and click "Analyze Meeting".</div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+    let db;
+    let auth;
+    let userId;
+
+    function initFirebase() {
+      try {
+        const app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        db = getFirestore(app);
+
+        onAuthStateChanged(auth, async (user) => {
+          if (user) {
+            userId = user.uid;
+            document.getElementById('userIdDisplay').innerText = `User ID: ${userId}`;
+          } else {
+            // Sign in anonymously if no token is available
+            try {
+              await signInAnonymously(auth);
+            } catch (error) {
+              console.error("Anonymous sign-in failed:", error);
+            }
+          }
+        });
+
+        if (initialAuthToken) {
+          signInWithCustomToken(auth, initialAuthToken).catch(error => {
+            console.error("Custom token sign-in failed:", error);
+          });
+        }
+      } catch (error) {
+        console.error("Firebase initialization failed:", error);
+        document.getElementById('statusMessage').innerHTML = `<p class="text-red-400">Error: Firebase initialization failed. Please check the console for details.</p>`;
+      }
+    }
+
+    window.processTranscript = async function() {
+      const transcript = document.getElementById('transcript').value.trim();
+      const resultDiv = document.getElementById('meetingResult');
+      const statusMessage = document.getElementById('statusMessage');
+      const analyzeBtn = document.getElementById('analyzeBtn');
+      const buttonText = document.getElementById('buttonText');
+      const spinner = document.getElementById('spinner');
+
+      if (transcript.length < 20) {
+        statusMessage.innerHTML = `<p class="text-red-400">⚠️ Please paste a longer transcript.</p>`;
+        return;
+      }
+
+      buttonText.classList.add('hidden');
+      spinner.classList.remove('hidden');
+      analyzeBtn.disabled = true;
+      statusMessage.innerHTML = `<p class="text-blue-400">Analyzing transcript...</p>`;
+      resultDiv.innerHTML = '';
+
+      const userLanguage = document.getElementById('language-select').value;
+      const promptText = `Analyze the following meeting transcript. Provide a concise summary, a list of key decisions, a list of action items with assignees if possible, and a suggested agenda for the next meeting. Respond in a JSON object format. The response text should be in the language with the BCP-47 language tag: ${userLanguage}.
+
+      Format:
+      {
+        "summary": "...",
+        "decisions": ["...", "..."],
+        "actionItems": ["...", "..."],
+        "nextAgenda": ["...", "..."]
+      }
+
+      Transcript:
+      ${transcript}`;
+
+      const apiKey = ""; // Canvas will provide this. Do not hardcode.
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+      try {
+        const payload = {
+          contents: [{ parts: [{ text: promptText }] }],
+          generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: "OBJECT",
+              properties: {
+                "summary": { "type": "STRING" },
+                "decisions": { "type": "ARRAY", "items": { "type": "STRING" } },
+                "actionItems": { "type": "ARRAY", "items": { "type": "STRING" } },
+                "nextAgenda": { "type": "ARRAY", "items": { "type": "STRING" } }
+              }
+            }
+          }
+        };
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
+          const jsonString = result.candidates[0].content.parts[0].text;
+          const parsedData = JSON.parse(jsonString);
+
+          renderResults(parsedData);
+          saveAnalysisToFirestore(transcript, parsedData);
+
+        } else {
+          throw new Error("Invalid response format from API.");
+        }
+      } catch (error) {
+        console.error("AI analysis failed:", error);
+        statusMessage.innerHTML = `<p class="text-red-400">Error: Could not analyze transcript. Please try again or check the console.</p>`;
+      } finally {
+        buttonText.classList.remove('hidden');
+        spinner.classList.add('hidden');
+        analyzeBtn.disabled = false;
+      }
+    };
+
+    function renderResults(data) {
+      const resultDiv = document.getElementById('meetingResult');
+      let html = '';
+      
+      const copyIcon = `<svg class="w-4 h-4 text-gray-400 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>`;
+
+      if (data.summary) {
+        html += `<h4 class="text-xl font-bold mt-4 mb-2 text-gray-200 flex justify-between items-center">
+                  <span>📌 Summary</span>
+                  <button class="copy-btn group p-2 rounded-lg bg-gray-700 hover:bg-blue-600 transition-all" onclick="copyToClipboard('${btoa(data.summary)}', this)">${copyIcon}</button>
+                </h4>
+                <p class="text-gray-300 whitespace-pre-wrap">${data.summary}</p>`;
+      }
+
+      if (data.decisions && data.decisions.length > 0) {
+        const decisionsList = data.decisions.map(item => `<li>${item}</li>`).join('');
+        html += `<h4 class="text-xl font-bold mt-4 mb-2 text-gray-200 flex justify-between items-center">
+                  <span>✅ Key Decisions</span>
+                  <button class="copy-btn group p-2 rounded-lg bg-gray-700 hover:bg-blue-600 transition-all" onclick="copyToClipboard('${btoa(data.decisions.join('\n'))}', this)">${copyIcon}</button>
+                </h4>
+                <ul class="list-disc list-inside text-gray-300 space-y-1">${decisionsList}</ul>`;
+      }
+
+      if (data.actionItems && data.actionItems.length > 0) {
+        const actionItemsList = data.actionItems.map(item => `<li>${item}</li>`).join('');
+        html += `<h4 class="text-xl font-bold mt-4 mb-2 text-gray-200 flex justify-between items-center">
+                  <span>🛠️ Action Items</span>
+                  <button class="copy-btn group p-2 rounded-lg bg-gray-700 hover:bg-blue-600 transition-all" onclick="copyToClipboard('${btoa(data.actionItems.join('\n'))}', this)">${copyIcon}</button>
+                </h4>
+                <ol class="list-decimal list-inside text-gray-300 space-y-1">${actionItemsList}</ol>`;
+      }
+
+      if (data.nextAgenda && data.nextAgenda.length > 0) {
+        const nextAgendaList = data.nextAgenda.map(item => `<li>${item}</li>`).join('');
+        html += `<h4 class="text-xl font-bold mt-4 mb-2 text-gray-200 flex justify-between items-center">
+                  <span>🔮 Suggested Next Agenda</span>
+                  <button class="copy-btn group p-2 rounded-lg bg-gray-700 hover:bg-blue-600 transition-all" onclick="copyToClipboard('${btoa(data.nextAgenda.join('\n'))}', this)">${copyIcon}</button>
+                </h4>
+                <ul class="list-disc list-inside text-gray-300 space-y-1">${nextAgendaList}</ul>`;
+      }
+
+      resultDiv.innerHTML = html;
+      document.getElementById('statusMessage').innerHTML = `<p class="text-green-400">Analysis complete!</p>`;
+    }
+
+    window.copyToClipboard = function(base64Text, button) {
+      const decodedText = atob(base64Text);
+      const tempInput = document.createElement('textarea');
+      tempInput.value = decodedText;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempInput);
+
+      button.innerHTML = `<svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>`;
+      setTimeout(() => {
+        const copyIcon = `<svg class="w-4 h-4 text-gray-400 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>`;
+        button.innerHTML = copyIcon;
+      }, 2000);
+    };
+
+    async function saveAnalysisToFirestore(transcript, analysis) {
+      if (!db || !userId) {
+        console.error("Firestore or user ID not available.");
+        return;
+      }
+      try {
+        const meetingsCollectionRef = collection(db, `artifacts/${appId}/public/data/meetings`);
+        await setDoc(doc(meetingsCollectionRef), {
+          userId: userId,
+          timestamp: new Date().toISOString(),
+          transcript: transcript,
+          analysis: analysis
+        });
+        console.log("Analysis saved to Firestore successfully.");
+      } catch (e) {
+        console.error("Error adding document: ", e);
+      }
+    }
+
+    initFirebase();
+  </script>
+</body>
+</html>
