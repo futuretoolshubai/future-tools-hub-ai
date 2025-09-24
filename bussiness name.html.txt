@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Name & Slogan Generator</title>
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            color: #1a202c;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        .input-field {
+            border: 2px solid #e2e8f0;
+            background-color: #f8fafc;
+        }
+        .input-field:focus {
+            border-color: #6366f1;
+            outline: none;
+        }
+        .result-box {
+            background-color: #f8fafc;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
+
+    <!-- Main application container -->
+    <div class="container mx-auto p-8 card max-w-2xl">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-extrabold text-gray-800 mb-2">
+                Business Name & Slogan Generator
+            </h1>
+            <p class="text-gray-600 text-lg">
+                Generate creative names, slogans, and logo ideas for your business.
+            </p>
+        </header>
+
+        <section class="space-y-6">
+            <!-- Input fields -->
+            <div class="space-y-4">
+                <div>
+                    <label for="industry-input" class="block text-gray-700 font-semibold mb-2">Business Industry</label>
+                    <input type="text" id="industry-input" placeholder="e.g., online education, coffee shop" class="w-full p-3 rounded-lg input-field transition-colors">
+                </div>
+                <div>
+                    <label for="keywords-input" class="block text-gray-700 font-semibold mb-2">Keywords (2-3 words)</label>
+                    <input type="text" id="keywords-input" placeholder="e.g., learn, hub, future" class="w-full p-3 rounded-lg input-field transition-colors">
+                </div>
+                <div>
+                    <label for="tone-input" class="block text-gray-700 font-semibold mb-2">Tone</label>
+                    <input type="text" id="tone-input" placeholder="e.g., modern, friendly, professional" class="w-full p-3 rounded-lg input-field transition-colors">
+                </div>
+            </div>
+
+            <button
+                id="generate-button"
+                class="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:from-purple-600 hover:to-indigo-700 transition-all duration-300 transform hover:scale-105"
+            >
+                Generate Ideas
+            </button>
+
+            <div id="loading-indicator" class="hidden text-center text-gray-500 text-lg py-4">
+                <div class="flex items-center justify-center">
+                    <svg class="animate-spin -ml-1 mr-3 h-6 w-6 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Generating creative ideas...
+                </div>
+            </div>
+
+            <!-- Output sections -->
+            <div id="results-container" class="hidden space-y-8">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Business Name Ideas</h2>
+                    <ul id="names-list" class="space-y-4"></ul>
+                </div>
+
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Slogans & Taglines</h2>
+                    <ul id="slogans-list" class="space-y-4"></ul>
+                </div>
+
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Minimal Logo Ideas</h2>
+                    <ul id="logos-list" class="space-y-4"></ul>
+                </div>
+            </div>
+
+            <!-- Message box for mock messages and errors -->
+            <div id="message-box" class="fixed inset-0 flex items-center justify-center hidden bg-gray-900 bg-opacity-50 z-50">
+                <div class="bg-gray-800 p-6 rounded-xl shadow-2xl text-center max-w-sm w-full">
+                    <p id="message-text" class="text-lg font-medium text-white mb-4"></p>
+                    <button id="close-message" class="bg-purple-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors">OK</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const industryInput = document.getElementById('industry-input');
+        const keywordsInput = document.getElementById('keywords-input');
+        const toneInput = document.getElementById('tone-input');
+        const generateButton = document.getElementById('generate-button');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const resultsContainer = document.getElementById('results-container');
+        const namesList = document.getElementById('names-list');
+        const slogansList = document.getElementById('slogans-list');
+        const logosList = document.getElementById('logos-list');
+        const messageBox = document.getElementById('message-box');
+        const messageText = document.getElementById('message-text');
+        const closeMessageButton = document.getElementById('close-message');
+        const apiKey = ""; // Canvas will automatically provide a key for API calls
+
+        function showMessage(message) {
+            messageText.textContent = message;
+            messageBox.classList.remove('hidden');
+        }
+
+        closeMessageButton.addEventListener('click', () => {
+            messageBox.classList.add('hidden');
+        });
+        
+        // Example mock data for a variety of inputs
+        const mockData = {
+            "online education": {
+                names: [
+                    { name: "Learnify", reason: "Combines 'learn' and 'simplify' for an easy, modern feel." },
+                    { name: "Edubloom", reason: "Suggests educational growth and development." },
+                    { name: "SkillSpark", reason: "Implies igniting skills and potential." },
+                    { name: "Nexus Learning", reason: "Positions the business as a central hub for knowledge." },
+                    { name: "Future Forward Academy", reason: "Highlights a progressive, innovative approach to education." },
+                ],
+                slogans: [
+                    "Your future, simplified.",
+                    "Learning for the modern world.",
+                    "Ignite your potential.",
+                    "Connecting you to knowledge.",
+                    "Skill up, level up."
+                ],
+                logos: [
+                    "A stylized 'L' with a subtle gear icon, representing learning and technology.",
+                    "A simplified tree silhouette where the leaves are a network of connected dots.",
+                    "A sleek, geometric icon of a rocket launching from an open book."
+                ]
+            },
+            "coffee shop": {
+                names: [
+                    { name: "Brew & Bloom", reason: "Suggests fresh coffee and a vibrant, welcoming atmosphere." },
+                    { name: "The Daily Grind", reason: "A classic and friendly name for a local spot." },
+                    { name: "Roast & Relish", reason: "Highlights the roasting process and the joy of a good cup." },
+                    { name: "Cozy Cup Corner", reason: "Emphasizes comfort and community." },
+                    { name: "Wanderlust Coffee Co.", reason: "For a travel-themed or adventurous brand." },
+                ],
+                slogans: [
+                    "Sip happiness, one cup at a time.",
+                    "Your daily dose of calm.",
+                    "Crafting moments, brewing coffee.",
+                    "Where great days begin.",
+                    "Fuel your journey."
+                ],
+                logos: [
+                    "A minimalist coffee bean with a small steam cloud.",
+                    "An elegant cup silhouette with a delicate leaf inside.",
+                    "A stylized globe with a coffee cup icon in the center."
+                ]
+            },
+            "fashion": {
+                names: [
+                    { name: "Stitch & Style", reason: "Combines the craft of tailoring with modern fashion." },
+                    { name: "Vogue Vault", reason: "Suggests a curated collection of trendy items." },
+                    { name: "Elegance Edit", reason: "Implies a focus on sophisticated, hand-picked pieces." },
+                    { name: "Urban Threads", reason: "A name for a street-style or contemporary fashion brand." },
+                    { name: "The Fabric Hub", reason: "Positions the business as a central place for all things fashion." },
+                ],
+                slogans: [
+                    "Your style, elevated.",
+                    "Threads for every story.",
+                    "Crafted for you.",
+                    "Where style meets you.",
+                    "Dress your ambition."
+                ],
+                logos: [
+                    "A simple needle and thread forming a stylized letter 'S'.",
+                    "A hanger icon with a tiny star at the top.",
+                    "A clean, sans-serif font with a subtle underline."
+                ]
+            },
+            "pet care": {
+                names: [
+                    { name: "Pawsitive Pet Co.", reason: "A playful name that suggests a positive, caring approach." },
+                    { name: "Furry Friends Hub", reason: "Highlights a community-focused, welcoming space for pets." },
+                    { name: "The Purrfect Shop", reason: "A catchy, fun name for cat-focused products." },
+                    { name: "Tailwaggers", reason: "A cute, memorable name that evokes a sense of joy." },
+                    { name: "Happy Paws Parlor", reason: "A friendly name for grooming and services." },
+                ],
+                slogans: [
+                    "For the love of pets.",
+                    "Where your pet is family.",
+                    "Happy pets, happy owners.",
+                    "A paw-some life starts here.",
+                    "Your pet’s best friend."
+                ],
+                logos: [
+                    "A simple paw print with a small heart in the center.",
+                    "Two animal silhouettes (a dog and a cat) facing each other.",
+                    "A line drawing of a friendly dog wagging its tail."
+                ]
+            },
+            "health and wellness": {
+                names: [
+                    { name: "Vitality Labs", reason: "Suggests a scientific, modern approach to health." },
+                    { name: "Inner Bloom Wellness", reason: "Focuses on personal growth and inner health." },
+                    { name: "Mindful Moves", reason: "A name for yoga or meditation services that emphasizes conscious action." },
+                    { name: "The Healing Hub", reason: "Positions the business as a central resource for holistic health." },
+                    { name: "Purely Balanced", reason: "Suggests natural products and a balanced lifestyle." },
+                ],
+                slogans: [
+                    "Wellness, simplified.",
+                    "Your path to a better you.",
+                    "Embrace your inner glow.",
+                    "Healthy living, made simple.",
+                    "Find your balance."
+                ],
+                logos: [
+                    "A circle with a stylized human figure inside, holding a leaf.",
+                    "A flowing, abstract shape that represents a calm mind.",
+                    "A minimal leaf icon with a subtle wave pattern inside."
+                ]
+            },
+            "default": {
+                names: [
+                    { name: "Nexus Solutions", reason: "Suggests a central hub for all problems." },
+                    { name: "Innovate Hub", reason: "Combines innovation with a community feel." },
+                    { name: "Future Forward", reason: "Positions the business as a leader in future trends." },
+                    { name: "Peak Performance", reason: "Highlights a focus on achieving top results." },
+                    { name: "Creative Canvas", reason: "Evokes imagination and unlimited potential." },
+                ],
+                slogans: [
+                    "Building a brighter future.",
+                    "Solutions for tomorrow, today.",
+                    "Where great ideas begin.",
+                    "Beyond the ordinary.",
+                    "Your partner in success."
+                ],
+                logos: [
+                    "A stylized geometric arrow pointing upwards.",
+                    "A minimalist lightbulb with a subtle star inside.",
+                    "Three interconnected dots forming a triangle."
+                ]
+            }
+        };
+
+        generateButton.addEventListener('click', async () => {
+            const industry = industryInput.value.trim().toLowerCase();
+            const keywords = keywordsInput.value.trim().toLowerCase();
+            const tone = toneInput.value.trim().toLowerCase();
+            
+            if (!industry || !keywords || !tone) {
+                showMessage("Please fill in all the input fields.");
+                return;
+            }
+
+            loadingIndicator.classList.remove('hidden');
+            resultsContainer.classList.add('hidden');
+            
+            // Simulate AI generation with a placeholder delay
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Get mock data based on input
+            let data = mockData.default;
+            const combinedInput = (industry + " " + keywords).toLowerCase();
+
+            if (combinedInput.includes('coffee') || combinedInput.includes('brew')) {
+                data = mockData['coffee shop'];
+            } else if (combinedInput.includes('learn') || combinedInput.includes('education') || combinedInput.includes('academy')) {
+                data = mockData['online education'];
+            } else if (combinedInput.includes('style') || combinedInput.includes('fashion') || combinedInput.includes('apparel')) {
+                data = mockData['fashion'];
+            } else if (combinedInput.includes('pet') || combinedInput.includes('dog') || combinedInput.includes('cat') || combinedInput.includes('animal')) {
+                data = mockData['pet care'];
+            } else if (combinedInput.includes('health') || combinedInput.includes('wellness') || combinedInput.includes('yoga') || combinedInput.includes('fitness')) {
+                data = mockData['health and wellness'];
+            }
+            
+            namesList.innerHTML = '';
+            slogansList.innerHTML = '';
+            logosList.innerHTML = '';
+
+            data.names.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'result-box flex justify-between items-start';
+                li.innerHTML = `
+                    <div>
+                        <p class="font-bold text-lg text-gray-900">${item.name}</p>
+                        <p class="text-sm text-gray-500 mt-1">${item.reason}</p>
+                    </div>
+                    <button class="bg-blue-500 text-white text-xs px-3 py-1 rounded-full hover:bg-blue-600 transition-colors mt-1 check-availability">
+                        Check Availability
+                    </button>
+                `;
+                namesList.appendChild(li);
+                li.querySelector('.check-availability').addEventListener('click', () => {
+                    showMessage("Domain name availability is a mock feature. The .com and .co domains are likely taken for popular names.");
+                });
+            });
+
+            data.slogans.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'result-box';
+                li.textContent = item;
+                slogansList.appendChild(li);
+            });
+
+            data.logos.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'result-box';
+                li.textContent = item;
+                logosList.appendChild(li);
+            });
+
+            loadingIndicator.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+        });
+    </script>
+
+</body>
+</html>
