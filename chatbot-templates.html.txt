@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Chatbot Templates - Gemini</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+    .container {
+      max-width: 900px;
+      width: 100%;
+      background: #1e293b;
+      padding: 2.5rem;
+      border-radius: 1.5rem;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      border: 1px solid #334155;
+    }
+    .input-box {
+      background-color: #0f172a;
+      border: 1px solid #334155;
+      color: #e2e8f0;
+    }
+    .spinner {
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top: 4px solid #fff;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .copy-btn {
+      transition: background-color 0.2s;
+    }
+    .chip {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      background: #334155;
+      color: #e2e8f0;
+      border-radius: 9999px;
+      margin: 0.25rem;
+      font-size: 0.875rem;
+    }
+    .result-pre {
+      background: #0f172a;
+      border: 1px solid #334155;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      overflow-x: auto;
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="text-3xl font-bold text-blue-400 mb-2">AI Chatbot Templates</h1>
+    <p class="text-gray-400 mb-6">
+      Enter your business details and a common customer question to generate a full set of chatbot replies.
+    </p>
+
+    <!-- Input Section -->
+    <div class="space-y-4">
+      <div>
+        <label for="biz" class="block text-gray-300 font-medium mb-1">Business / Service:</label>
+        <input id="biz" class="input-box w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200" placeholder="e.g., Online clothing store with fast delivery">
+      </div>
+      <div>
+        <label for="question" class="block text-gray-300 font-medium mb-1">Common user question:</label>
+        <input id="question" class="input-box w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200" placeholder="e.g., Where is my order? / How to return an item?">
+      </div>
+      <div>
+        <label for="tone" class="block text-gray-300 font-medium mb-1">Tone:</label>
+        <select id="tone" class="input-box w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200">
+          <option value="friendly">Friendly</option>
+          <option value="formal">Formal</option>
+          <option value="professional">Short & professional</option>
+          <option value="empathetic">Empathetic</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Generate Button -->
+    <div class="flex justify-center mt-6">
+      <button id="generateBtn" onclick="generateTemplates()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transform transition-transform duration-200 hover:scale-105 flex items-center justify-center">
+        <span id="buttonText">Generate Templates</span>
+        <div id="spinner" class="hidden ml-2 spinner"></div>
+      </button>
+    </div>
+
+    <hr class="border-gray-700 my-8">
+
+    <!-- Results Section -->
+    <div id="results" class="hidden">
+      <div id="statusMessage" class="text-center text-gray-400 mb-4"></div>
+      
+      <div id="repliesArea" class="space-y-4 mb-6"></div>
+
+      <h5 class="text-lg font-semibold text-gray-200 mb-2">Escalation Script (for human agent)</h5>
+      <pre id="escalationPre" class="result-pre"></pre>
+
+      <h5 class="text-lg font-semibold text-gray-200 mt-4 mb-2">Short FAQ Snippet</h5>
+      <pre id="faqPre" class="result-pre"></pre>
+
+      <div class="mt-4 flex items-center">
+        <button class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200" onclick="copyAll()">Copy All</button>
+        <span id="copyMsg" class="ms-2 text-green-400 text-sm hidden">Copied to clipboard!</span>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    async function generateTemplates() {
+      const biz = document.getElementById('biz').value.trim();
+      const question = document.getElementById('question').value.trim();
+      const tone = document.getElementById('tone').value;
+      const generateBtn = document.getElementById('generateBtn');
+      const buttonText = document.getElementById('buttonText');
+      const spinner = document.getElementById('spinner');
+      const resultsDiv = document.getElementById('results');
+      const statusMessage = document.getElementById('statusMessage');
+
+      if (!biz || !question) {
+        statusMessage.textContent = 'Please enter both the business and the question.';
+        resultsDiv.classList.remove('hidden');
+        return;
+      }
+
+      // Show loading state
+      buttonText.classList.add('hidden');
+      spinner.classList.remove('hidden');
+      generateBtn.disabled = true;
+      resultsDiv.classList.add('hidden');
+      statusMessage.textContent = 'Generating templates... Please wait.';
+      resultsDiv.classList.remove('hidden');
+
+      const promptText = `
+        You are a world-class AI model specializing in customer service chatbot scripts. Your task is to generate a comprehensive set of chatbot templates for a business based on a user's common question.
+
+        The output must be structured precisely in the following format. Do not add any extra text, introductions, or explanations. Use Markdown syntax to format the output.
+
+        ## Replies
+        * Friendly:
+        * Formal:
+        * Short & Professional:
+        * Empathetic:
+        * Call-to-action:
+
+        ## Escalation Script
+        
+        ## FAQ Snippet
+
+        **Business:** ${biz}
+        **Common Question:** ${question}
+        **Tone:** ${tone}
+      `;
+
+      const apiKey = ""; // This will be provided by the environment
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+      try {
+        const payload = {
+          contents: [{ parts: [{ text: promptText }] }],
+        };
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`API error: ${response.status} - ${errorText}`);
+        }
+
+        const result = await response.json();
+        const generatedContent = result?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+        if (!generatedContent.trim()) {
+          throw new Error("Empty or invalid content received from API.");
+        }
+
+        renderTemplates(generatedContent);
+
+      } catch (error) {
+        console.error("AI generation failed:", error);
+        statusMessage.textContent = `Error: Could not generate templates. Please try again or check the console for details.`;
+      } finally {
+        buttonText.classList.remove('hidden');
+        spinner.classList.add('hidden');
+        generateBtn.disabled = false;
+      }
+    }
+
+    function renderTemplates(markdownContent) {
+      const repliesArea = document.getElementById('repliesArea');
+      const escalationPre = document.getElementById('escalationPre');
+      const faqPre = document.getElementById('faqPre');
+      const statusMessage = document.getElementById('statusMessage');
+
+      const lines = markdownContent.split('\n');
+      let currentSection = '';
+      let replies = {};
+      let escalation = '';
+      let faq = '';
+
+      lines.forEach(line => {
+        if (line.startsWith('## Replies')) {
+          currentSection = 'replies';
+        } else if (line.startsWith('## Escalation Script')) {
+          currentSection = 'escalation';
+        } else if (line.startsWith('## FAQ Snippet')) {
+          currentSection = 'faq';
+        } else if (currentSection === 'replies' && line.startsWith('* ')) {
+          const [tone, text] = line.substring(4).split(':');
+          if (tone && text) {
+            replies[tone.trim()] = text.trim();
+          }
+        } else if (currentSection === 'escalation' && line.trim() && !line.startsWith('**') && !line.startsWith('##')) {
+          escalation += line + '\n';
+        } else if (currentSection === 'faq' && line.trim() && !line.startsWith('**') && !line.startsWith('##')) {
+          faq += line + '\n';
+        }
+      });
+      
+      repliesArea.innerHTML = '';
+      Object.entries(replies).forEach(([tone, text], index) => {
+        const div = document.createElement('div');
+        div.className = 'flex flex-col';
+        div.innerHTML = `
+          <div class="flex items-center justify-between mb-1">
+            <span class="chip">${tone}</span>
+            <button class="copy-btn bg-gray-600 hover:bg-gray-500 text-white text-xs font-semibold py-1 px-2 rounded-full" onclick="copyText(this, '${btoa(encodeURIComponent(text))}')">Copy</button>
+          </div>
+          <pre class="result-pre">${text}</pre>
+        `;
+        repliesArea.appendChild(div);
+      });
+
+      escalationPre.textContent = escalation.trim();
+      faqPre.textContent = faq.trim();
+      
+      window._chatbot_texts = { replies, escalation, faq };
+      statusMessage.textContent = 'Templates generated successfully!';
+      document.getElementById('results').classList.remove('hidden');
+    }
+
+    function copyText(button, encodedText) {
+      const text = decodeURIComponent(atob(encodedText));
+      navigator.clipboard.writeText(text).then(() => {
+        const copyMsg = document.getElementById('copyMsg');
+        copyMsg.classList.remove('hidden');
+        setTimeout(() => copyMsg.classList.add('hidden'), 2000);
+      }).catch(err => {
+        console.error('Failed to copy text:', err);
+      });
+    }
+    
+    function copyAll() {
+      if (!window._chatbot_texts) return;
+      const allText = [
+        '--- Suggested Replies ---',
+        ...Object.values(window._chatbot_texts.replies),
+        '--- Escalation Script ---',
+        window._chatbot_texts.escalation,
+        '--- FAQ ---',
+        window._chatbot_texts.faq
+      ].join('\n\n');
+      
+      navigator.clipboard.writeText(allText).then(() => {
+        const copyMsg = document.getElementById('copyMsg');
+        copyMsg.classList.remove('hidden');
+        setTimeout(() => copyMsg.classList.add('hidden'), 2000);
+      }).catch(err => {
+        console.error('Failed to copy all text:', err);
+      });
+    }
+  </script>
+</body>
+</html>
